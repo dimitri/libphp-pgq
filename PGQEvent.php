@@ -1,12 +1,5 @@
 <?php
 
-// No sense is given nor necessary for those constants, as soon as
-// there's no colision.
-define("PGQ_EVENT_OK",     1);
-define("PGQ_EVENT_FAILED", 2);
-define("PGQ_EVENT_RETRY",  5);
-define("PGQ_ABORT_BATCH", 11);
-
 /**
  * PGQEvent stores URLencoded data and provides simple API
  * to access its fields.

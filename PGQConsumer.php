@@ -1,6 +1,6 @@
 <?php
+require_once("PGQClass.php");
 require_once("SystemDaemon.php");
-require_once("PGQEvent.php");
 
 /**
  * PGQConsumer is a SystemDaemon providing the PGQ SQL API for PHP
@@ -476,378 +476,6 @@ abstract class PGQConsumer extends SystemDaemon
     return $ret;
   }
 
-    
-  /**
-   * Queue creation
-   */
-  protected function create_queue() {
-    $sql_cq = sprintf("SELECT pgq.create_queue('%s');", 
-		      pg_escape_string($this->qname));
-    $this->log->verbose("create_queue: %s", $sql_cq);
-
-    $r = pg_query($this->pg_src_con, $sql_cq);
-    if( $r === False ) {
-      $this->log->fatal("Could not create queue '%s'", $this->qname);
-      return False;
-    }
-    $result = (pg_fetch_result($r, 0, 0) == 1);
-    
-    if( ! $result ) {
-    	$this->log->error("PGQConsumer: could not create queue.");
-    }
-    
-    return $result;
-  }		
-
-  /**
-   * Queue drop
-   */
-  protected function drop_queue() {
-    $sql = sprintf("SELECT pgq.drop_queue('%s');", 
-		   pg_escape_string($this->qname));
-    $this->log->verbose("drop_queue: %s", $sql);
-
-    $r = pg_query($this->pg_src_con, $sql);
-    if( $r === False ) {
-      $this->log->fatal("Could not drop queue '%s'", $this->qname);
-      return False;
-    }
-    return pg_fetch_result($r, 0, 0) == 1;
-  }
-
-  /**
-   * Queue exists?
-   */
-  protected function queue_exists() {
-    $sql = sprintf("SELECT * FROM pgq.get_queue_info()");
-		                  
-    $this->log->verbose("%s", $sql);
-    if( ($r = pg_query($this->pg_src_con, $sql)) === False ) {
-      $this->log->error("Could not get queue info");
-      return False;
-    }		
-    $queues    = array();
-    $resultset = pg_fetch_all($r);
-    
-    if( $resultset === False ) {
-      $this->log->notice("PGQConsumer.queue_exists() got no queue.");
-      return False;
-    }
-    
-    foreach( $resultset as $row ) {
-      if( $row["queue_name"] == $this->qname )
-	return True;
-    }
-    return False;
-  }
-	
-  /**
-   * Register PGQ Consumer.
-   *
-   * @return: boolean
-   */
-  protected function register() {			
-    $sql_rg = sprintf("SELECT pgq.register_consumer('%s', '%s');",
-		      pg_escape_string($this->qname),
-		      pg_escape_string($this->cname));
-    
-    $this->log->verbose("%s", $sql_rg);
-    if( ($r = pg_query($this->pg_src_con, $sql_rg)) === False ) {
-      $this->log->warning("Could not register consumer '%s' ".
-			  "to queue '%s'", $this->cname, $this->qname);
-      return False;
-    }
-    
-    $registered = pg_fetch_result($r, 0, 0);
-    if( $registered == "1" ) {
-      return True;
-    }
-    else {
-      $this->log->warning("Register Consumer failed (%d).", $registered);
-      return False;
-    }
-  }
-	
-  /**
-   * Unregister PGQ Consumer. Called from stop().
-   */
-  protected function unregister() {
-    if( ! $this->connected )
-      $this->connect();
-    
-    $sql_ur = sprintf("SELECT pgq.unregister_consumer('%s', '%s');",
-		      pg_escape_string($this->qname),
-		      pg_escape_string($this->cname));
-    
-    $this->log->verbose("%s", $sql_ur);
-    if( pg_query($this->pg_src_con, $sql_ur) === False ) {
-      $this->log->fatal("Could not unregister consumer '%s' ".
-			"to queue '%s'", $this->cname, $this->qname);
-    }
-  }
-	
-  /**
-   * are we registered already?
-   */
-  protected function is_registered() {
-    $infos = $this->get_consumer_info();
-    
-    if( $infos !== False ) {
-      $this->log->debug("is_registered %s",
-			( $infos["queue_name"] == $this->qname
-		       && $infos["consumer_name"] == $this->cname
-			  ?
-			  "True" : "False" ));
-      
-      return $infos["queue_name"] == $this->qname 
-	&& $infos["consumer_name"] == $this->cname;
-    }
-    $this->log->warning("is_registered: count not get consumer infos.");
-    return False;
-  }
-
-  /**
-   * get_consumer_info
-   */
-  protected function get_consumer_info() {
-    $sql_ci = sprintf("SELECT * FROM pgq.get_consumer_info('%s', '%s')",
-		      pg_escape_string($this->qname),
-		      pg_escape_string($this->cname));
-    
-    $this->log->debug("%s", $sql_ci);
-    $result = pg_query($this->pg_src_con, $sql_ci);
-    
-    if(  $result === False ) {
-      $this->log->warning("Could not get consumer info for '%s'", $this->cname);
-      return False;
-    }
-    if( pg_num_rows($result) == 1 )
-      return pg_fetch_assoc($result, 0);
-    else {
-      $this->log->warning("get_consumer_info('%s', '%s') ".
-			  "did not get 1 row.", $this->qname, $this->cname);
-      return False;
-    }
-  }
-	
-  /**
-   * Get next batch id
-   *
-   * Returns null when pgq.next_batch() returns null or failed.
-   */
-  protected function next_batch() {
-    $sql_nb = sprintf("SELECT pgq.next_batch('%s', '%s')",
-		      pg_escape_string($this->qname),
-		      pg_escape_string($this->cname));
-    
-    $this->log->verbose("%s", $sql_nb);
-    if( ($r = pg_query($this->pg_src_con, $sql_nb)) === False ) {
-      $this->log->error("Could not get next batch");
-      return False;
-    }
-    
-    $batch_id = pg_fetch_result($r, 0, 0);	
-    $this->log->debug("Get batch_id %s (isnull=%s)", 
-		      $batch_id, 
-		      ($batch_id === null ? "True" : "False"));
-    return $batch_id;
-  }
-
-  /**
-   * Get batch events
-   * 
-   * @return array(PGQEvents);
-   */
-  protected function get_batch_events($batch_id) {
-    $sql_ge = sprintf("SELECT * FROM pgq.get_batch_events(%d)", (int)$batch_id);
-		                  
-    $this->log->verbose("%s", $sql_ge);
-    if( ($r = pg_query($this->pg_src_con, $sql_ge)) === False ) {
-      $this->log->error("Could not get next batch events from batch %d",
-			$batch_id);
-      return False;
-    }		
-    $events    = array();
-    $resultset = pg_fetch_all($r);
-    
-    if( $resultset === False ) {
-      $this->log->notice("get_batch_events(%d) got 'False' ".
-			  "(empty list or error)", $batch_id);
-      return False;
-    }
-    
-    foreach( $resultset as $row ) {
-      $events[] = new PGQEvent($this->log, $row);
-    }
-    return $events;
-  }
-	
-  /**
-   * Mark event as failed
-   */
-  protected function event_failed($batch_id, $event) {
-    $sql_ef = sprintf("SELECT pgq.event_failed(%d, %d, '%s');",
-		      (int)$batch_id,
-		      (int)$event->id,
-		      pg_escape_string($event->failed_reason));
-    
-    $this->log->verbose("%s", $sql_ef);
-    if( pg_query($this->pg_src_con, $sql_ef) === False ) {
-      $this->log->error("Could not mark failed event %d from batch %d",
-			(int)$event->id, (int)$batch_id);
-      return False;
-    }
-    return True;
-  }
-	
-  /**
-   * Mark event for retry
-   */
-  protected function event_retry($batch_id, $event) {
-    $sql_er = sprintf("SELECT pgq.event_retry(%d, %d, %d);",
-		      (int)$batch_id,
-		      (int)$event->id,
-		      (int)$event->retry_delay);
-    
-    $this->log->verbose("%s", $sql_er);
-    if( pg_query($this->pg_src_con, $sql_er) === False ) {
-      $this->log->error("Could not retry event %d from batch %d",
-			(int)$event->id, (int)$batch_id);
-      return False;
-    }
-    return True;
-  }
-	
-  /**
-   * Finish Batch
-   */
-  protected function finish_batch($batch_id) {
-    $sql_fb = sprintf("SELECT pgq.finish_batch(%d);", (int)$batch_id);
-    
-    $this->log->verbose("%s", $sql_fb);
-    if( pg_query($this->pg_src_con, $sql_fb) === False ) {
-      $this->log->error("Could not finish batch %d", (int)$batch_id);
-      return False;
-    }	
-    return True;
-  }
-
-  /**
-   * failed_event_list
-   * returns array(PGQEvent)
-   */
-  protected function failed_event_list() {
-    $sql = sprintf("SELECT * FROM pgq.failed_event_list('%s', '%s')",
-                   pg_escape_string($this->qname),
-                   pg_escape_string($this->cname));
-		                  
-    $this->log->verbose("%s", $sql);
-    if( ($r = pg_query($this->pg_src_con, $sql)) === False ) {
-      $this->log->error("Could not get next failed event list");
-      return False;
-    }		
-    $events    = array();
-    $resultset = pg_fetch_all($r);
-    
-    if( $resultset === False ) {
-      $this->log->notice("failed_event_list(%d) got 'False' ".
-			  "(empty list or error)", $batch_id);
-      return False;
-    }
-    
-    foreach( $resultset as $row ) {
-      $events[] = new PGQEvent($this->log, $row);
-    }
-    return $events;
-  }
-
-  /**
-   * Helper function failed_event_delete_all
-   */
-  protected function failed_event_delete_all() {
-    $allok = True;
-    foreach( $this->failed_event_list() as $event_id => $event ) {
-      $allok = $allok && $this->failed_event_delete($event_id);
-
-      if( ! $allok )
-	return False;
-    }
-    return True;
-  }
-
-  /**
-   * failed_event_delete
-   */
-  protected function failed_event_delete($event_id) {
-    $sql = sprintf("SELECT pgq.failed_event_delete('%s', '%s', %d)",
-		   pg_escape_string($this->qname),
-		   pg_escape_string($this->cname),
-		   $event_id);
-    
-    $this->log->debug("%s", $sql);
-    $result = pg_query($this->pg_src_con, $sql);
-    
-    if( $result === False ) {
-      $this->log->warning("Could not delete failed event %d", $event_id);
-      return False;
-    }
-    if( pg_num_rows($result) == 1 ) {
-      print pg_fetch_assoc($result, 0);
-      return True;
-    }
-    else {
-      $this->log->warning("failed_event_delete('%s', '%s', %d) ".
-			  "did not get 1 row.", 
-			  $this->qname, $this->cname, $event_id);
-      return False;
-    }
-    return True;
-  }
-
-  /**
-   * Helper function failed_event_retry_all
-   */
-  protected function failed_event_retry_all() {
-    $allok = True;
-
-    foreach( $this->failed_event_list() as $event_id => $event ) {
-      $allok = $allok && $this->failed_event_retry($event_id);
-
-      if( ! $allok )
-	return False;
-    }
-    return True;
-  }
-
-  /**
-   * failed_event_delete
-   */
-  protected function failed_event_retry($event_id) {
-    $sql = sprintf("SELECT pgq.failed_event_retry('%s', '%s', %d)",
-		   pg_escape_string($this->qname),
-		   pg_escape_string($this->cname),
-		   $event_id);
-    
-    $this->log->debug("%s", $sql);
-    $result = pg_query($this->pg_src_con, $sql);
-    
-    if( $result === False ) {
-      $this->log->warning("Could not retry failed delete event %d", $event_id);
-      return False;
-    }
-    if( pg_num_rows($result) == 1 ) {
-      print pg_fetch_assoc($result, 0);
-      return True;
-    }
-    else {
-      $this->log->warning("failed_event_retry('%s', '%s', %d) ".
-			  "did not get 1 row.", 
-			  $this->qname, $this->cname, $event_id);
-      return False;
-    }
-    return True;
-  }
-	
   /**
    * Connects to the conw & conp connection strings.
    */
@@ -908,5 +536,84 @@ abstract class PGQConsumer extends SystemDaemon
    */
   protected function php_error_hook() {
     $this->rollback();
+  }
+    
+
+  protected function create_queue() {
+    return PGQ::create_queue($this->log, $this->pg_src_con, $this->qname);
+  }		
+
+  protected function drop_queue() {
+    return PGQ::drop_queue($this->log, $this->pg_src_con, $this->qname);
+  }
+
+  protected function queue_exists() {
+    return PGQ::queue_exists($this->log, $this->pg_src_con, $this->qname);
+  }
+	
+  protected function register() {			
+    return PGQ::register($this->log, $this->pg_src_con, 
+			 $this->qname, $this->cname);
+  }
+	
+  protected function unregister() {
+    return PGQ::unregister($this->log, $this->pg_src_con, 
+			   $this->qname, $this->cname);
+  }
+	
+  protected function is_registered() {
+    return PGQ::is_registered($this->log, $this->pg_src_con, 
+			      $this->qname, $this->cname);
+  }
+
+  protected function get_consumer_info() {
+    return PGQ::get_consumer_info($this->log, $this->pg_src_con, 
+				  $this->qname, $this->cname);
+  }
+	
+  protected function next_batch() {
+    return PGQ::next_batch($this->log, $this->pg_src_con, 
+			   $this->qname, $this->cname);
+  }
+
+  protected function finish_batch($batch_id) {
+    return PGQ::next_batch($this->log, $this->pg_src_con, $batch_id);
+  }
+
+  protected function get_batch_events($batch_id) {
+    return PGQ::get_batch_events($this->log, $this->pg_src_con, $batch_id);
+  }
+	
+  protected function event_failed($batch_id, $event) {
+    return PGQ::event_failed($this->log, $this->pg_src_con, $batch_id, $event);
+  }
+
+  protected function event_retry($batch_id, $event) {
+    return PGQ::event_retry($this->log, $this->pg_src_con, $batch_id, $event);
+  }
+
+  protected function failed_event_list() {
+    return PGQ::failed_event_list($this->log, $this->pg_src_con,
+				  $qname, $cname);
+  }
+
+  protected function failed_event_delete_all() {
+    return PGQ::failed_event_delete_all($this->log, $this->pg_src_con,
+					$qname, $cname);
+  }
+
+  protected function failed_event_delete($event_id) {
+    return PGQ::failed_event_delete($this->log, $this->pg_src_con,
+				    $qname, $cname, $event_id);
+  }
+
+  protected function failed_event_retry_all() {
+    return PGQ::failed_event_retry_all($this->log, $this->pg_src_con,
+				       $qname, $cname);
+  }
+
+  protected function failed_event_retry($event_id) {
+    return PGQ::failed_event_retry($this->log, $this->pg_src_con,
+				   $qname, $cname, $event_id);
   }
 }

@@ -1,3 +1,213 @@
+= PGQ-PHP
 
-PHP wrappers/tools for PgQ
+== Introduction
 
+This project provides PHP level API to use the PGQ SQL API.
+
+Read more about PGQ here:
+  http://skytools.projects.postgresql.org/doc/pgq-sql.html[]
+  http://www.pgcon.org/2008/schedule/events/79.en.html[]
+
+It then provides several kinds of Consumer that you'll want to
+extends. All the consumer wants you to implement your own
+process_event(&$event) callback function, and will care about PGQ
+inner fonctionning.
+
+PGQ is about producing events in a (work) queue and having one or more
+consumer get those events, in batches, and work on them. What the PHP
+class to be presented here do is fetching the batches and calling your
+own process_event() function for each event.
+
+== Tools
+
+=== SimpleLogger
+
+This class handles logging with a +loglevel+: only messages more
+important than current +loglevel+ are written to the logfile. The
+levels are, by increasing order of importance:
+
+* DEBUG
+* VERBOSE
+* NOTICE
+* WARNING
+* ERROR
+* FATAL
+
+The +SimpleLogger+ offers a method for each +loglevel+, taking a
+format string then arguments, just like +sprintf()+ does. You have for
+example 
+
+  $logger->debug("a message with a '%s' string", $str);
+
+=== SystemDaemon
+
+This class implements a System Daemon controlled with commands. The
+principle is to run in the background and loop forever, taking a
++$this->delay+ rest whenever possible between two loops.
+
++SystemDaemon+ uses SimpleLogger in +$this->log+ instance, and have it
+reopens its logfile at +reload+ time. This means it plays well with
+logrotate, just don't forget to +reload+ the daemon at logrotate
+postprocess time.
+
+The commands available for any +SystemDaemon+ are: +start+, +stop+,
++kill+, +reload+, +restart+, +status+, +logless+, +logmore+.
+
+The difference between +stop+ and +kill+ is that in the first case the
+daemon will terminate current processing and only stops at next
+opportunity to sleep for +$this->delay+, while +kill+ forces it into
+exiting (calling +$this->stop()+) first.
+
+The +reload+ command will have the daemon call user defined
++$this->reload()+ command at next sleep opportunity. This command
+could e.g. read a configuration file and change settings.
+
+Commands +logless+ and +logmore+ are considered without delay and
+makes the used logger to get instantly more or less verbose by
+increasing or decreasing its +loglevel+. This is useful when you want
+to know exactly what a daemon is doing now, but can't afford to
+restart it.
+
+When implementing a +SystemDaemon+, you get to just implement
++$this->config()+ and +$this->process()+ functions, which will get
+called in the infinite looping. The former will only get called when a
+reload has been ordered (+SIGHUP+), and the latter in each and every
+loop.
+
+The +SystemDaemon+ will also register its +SimpleLogger+ instance as
+the PHP error handler, and consider quitting when confronted to a PHP
+FATAL errors (one of +E_STRICT+, +E_PARSE+, +E_CORE_ERROR+,
++E_CORE_WARNING+, +E_COMPILE_ERROR+, +E_COMPILE_WARNING+), and will
+call user defined +$this->php_error_hook()+ for PHP +E_ERROR+ or
++E_USER_ERROR+ level errors.
+
+=== PGQ
+
+This class is abstract and has a +public static+ method for each SQL
+function that the PGQ SQL API offers. If PHP knew about namespaces or
+modules, this would be a module.
+
+== Consumers
+
+Those class are the one handling how PGQ really works. They will get
+batches from the queue, get events from them, allow you to process the
+event by calling user defined +$this->process_event(&$event)+
+function, and call finish_batch() as appropriate.
+
+The +$this->process_event()+ function should return one of those
+return codes:
+
+PGQ_EVENT_OK::
+
+  When the event processing is satisfactory.
+
+PGQ_EVENT_FAILED::
+
+  The event is tagged as failed with +$event->failed_reason+ reason,
+  and when using +PGQEventRemoteConsumer+ the related processing done
+  on remote database is rollbacked.
+
+PGQ_EVENT_RETRY::
+
+  The event is tagged as retry and will get reinserted into main queue
+  after a minimum delay of +$event->retry_delay+ seconds. When using
+  +PGQEventRemoteConsumer+ the related processing done on the remote
+  database is rollbacked.
+
+PGQ_ABORT_BATCH::
+
+  All current batch processing is canceled, at both remote and queue
+  database when using some sort of +RemoteConsumer+. The batch is not
+  finished, so you'll get the events back at next run(s).
+
+=== PGQConsumer
+
+This is a +SystemDaemon+ which implements some more commands in order
+to install the queue and register the consumer.
+
+When extending a +PGQConsumer+, you get to implement +$this->config()+
+and +$this->process_event()+ functions, and you're done.
+
+The constructor needs a queue name (+qname+), a consumer name
+(+cname+) and a database connection string.
+
+The added commands are:
+
+install::
+  Create the queue +qname+ and register a consumer +cname+.
+
+uninstall::
+  Unregister the consumer +cname+ and drop the queue +qname+.
+
+check::
+  True only if the queue +qname+ exists and the consumer +cname+ is registered.
+
+create_queue::
+  Create the queue +qname+.
+
+drop_queue::
+  Drop the queue +qname+.
+
+register::
+  Register the consumer +cname+.
+
+unregister::
+  Unregister the consumer +cname+.
+
+failed::
+  Print out a list of failed events for queue +qname+ and consumer
+  +cname+.
+
+delete::
+  Delete given event id, or all failed events if given +all+ as an
+  event id.
+
+retry::
+  Retry given event id, or all failed events if given +all+ as an
+  event id.
+
+=== PGQInteractiveConsumer
+
+This class assume the looping will get done elsewhere, at the calling
+site for example. It consumes all available events (up until
+next_batch() returns +null+).
+
+The lag is not controlled by the implementer class but rather by the
+user of it.
+
+Implementer have to call +$this->process()+, which will start
+consuming all available events and call the
++$this->process_event(&$event)+ hook for each event.
+
+Internal design note::
+  
+  +PGQInteractiveRemoteConsumer+ needs to implement all PGQ methods
+  for itself because of PHP limitation of extending from only one base
+  class: +PGQConsumer+ could not extends both +SystemDaemon+ and
+  +PGQClass+, where we should put the class abstraction over the API
+  module.
+
+=== PGQRemoteConsumer
+
++PGQRemoteConsumer+ is a +PGQConsumer+ controlling two PostgreSQL
+connections and which will handle +COMMIT+ and +ROLLBACK+ nicely on
+both of them.
+
+This means you want to use +PGQRemoteConsumer+ when you're processing
+events from one database and apply changes to another one, the remote
+one. The +PGQRemoteConsumer+ takes advantage of the fact that the
+remote processing is transactionnal (happens on a database) to get
+sure any +COMMIT+ ed work on remote connection is associated with
+events properly consumed.
+
+Any error in event consuming or remote processing will cause the
+current batch processing to be +ROLLBACK+ ed at both points, meaning
+the events will get consumed again later.
+
+=== PGQEventRemoteConsumer
+
+When you need to be able to +COMMIT+ or +ROLLBACK+ both transaction at
+event level, +PGQEventRemoteConsumer+ is what you're after. It will
+use a subtransaction (+SAVEPOINT+) for each event and will be able to
++ROLLBACK TO SAVEPOINT+ on the remote side for any processing error
+related to a single event processing.
