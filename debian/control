@@ -1,0 +1,25 @@
+Source: libphp-pgq
+Section: devel
+Priority: optional
+Maintainer: Dimitri Fontaine <dim@tapoueh.org>
+Standards-Version: 3.8.0
+Build-Depends: debhelper (>= 5)
+Homepage: http://pgfoundry.org/projects/skytools
+
+Package: libphp-pgq
+Architecture: all
+Depends: php5-cli
+Suggests: skytools, skytools-modules-8.1 | skytools-modules-8.2 | skytools-modules-8.3
+Description: PHP level API for PGQ PostgreSQL Queing solution
+ PgQ is Postgres based event processing system. It is part of SkyTools
+ package that contains several useful implementations on this
+ engine. Main function of PgQadm is to maintain and keep healthy both
+ pgq internal tables and tables that store events.
+ .
+ SkyTools is scripting framework for Postgres databases written in
+ Python that provides several utilities and implements common database
+ handling logic.
+ .
+ pgq-php is a scripting framework for PostgreSQL databases written in
+ PHP that provides several PGQ Consumer models to implement common
+ batch event processing handling logic.

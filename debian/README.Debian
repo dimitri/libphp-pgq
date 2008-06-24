@@ -1,0 +1,12 @@
+The provided files are to get included and derived in your own source:
+
+<?php
+ include("pgq/PGQConsumer.php");
+
+ class MyConsumer extends PGQConsumer
+ {
+   // read documentation to implement
+ }
+?>
+
+ -- Dimitri Fontaine <dim@tapoueh.org>, Tue, 24 Jun 2008 12:44:50 +0200
