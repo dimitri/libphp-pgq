@@ -1,6 +1,6 @@
 <?php
-require_once("PGQClass.php");
-require_once("SystemDaemon.php");
+require_once("pgq/PGQ.php");
+require_once("pgq/SystemDaemon.php");
 
 /**
  * PGQConsumer is a SystemDaemon providing the PGQ SQL API for PHP
@@ -577,7 +577,7 @@ abstract class PGQConsumer extends SystemDaemon
   }
 
   protected function finish_batch($batch_id) {
-    return PGQ::next_batch($this->log, $this->pg_src_con, $batch_id);
+    return PGQ::finish_batch($this->log, $this->pg_src_con, $batch_id);
   }
 
   protected function get_batch_events($batch_id) {

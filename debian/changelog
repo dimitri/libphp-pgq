@@ -1,3 +1,10 @@
+libphp-pgq (0.2-1) unstable; urgency=low
+
+  * FIX require path to include "pgq/", as implied by the packaging
+  * FIX some typos and add PGQ.php
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Wed, 25 Jun 2008 09:25:36 +0200
+
 libphp-pgq (0.1-1) unstable; urgency=low
 
   * Initial debian packaging

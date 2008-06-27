@@ -1,5 +1,5 @@
 PKGNAME = libphp-pgq
-VERSION = 0.1
+VERSION = 0.2
 DOCS    = README
 PHP_SRC = $(wildcard *.php)
 
@@ -56,3 +56,4 @@ deb:
 	(cd $(EXPORT) && debuild)
 	cp -a $(DEBDIR)/export/$(PKGNAME)[_-]$(VERSION)??[._]* ..
 	cp -a $(ARCHIVE) ..
+	cp -a $(ORIG) ..

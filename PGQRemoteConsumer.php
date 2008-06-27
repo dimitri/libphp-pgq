@@ -1,5 +1,5 @@
 <?php
-require_once("PGQConsumer.php");
+require_once("pgq/PGQConsumer.php");
 
 /**
  * PGQRemoteConsumer is a PGQConsumer to use when you need to process

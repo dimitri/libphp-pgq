@@ -1,7 +1,7 @@
 <?php
 define("PIDFILE_PREFIX", "/tmp");
 
-require_once("SimpleLogger.php");
+require_once("pgq/SimpleLogger.php");
 declare(ticks = 1);
 
 /**
