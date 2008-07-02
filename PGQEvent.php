@@ -39,8 +39,13 @@ class PGQEvent
     $this->type          = $row["ev_type"];
     $this->data          = $this->decode($row["ev_data"]);
     $this->table         = $row["ev_extra1"];
-    $this->failed_reason = $row[ "ev_failed_reason" ];
-    $this->failed_time   = $row[ "ev_failed_time" ];
+    
+    if( array_key_exists( "ev_failed_reason", $row ) ) {
+	$this->failed_reason = $row[ "ev_failed_reason" ];
+    }
+    if( array_key_exists( "ev_failed_time", $row ) ) {
+	$this->failed_time   = $row[ "ev_failed_time" ];
+    }
   }
 
   /**
