@@ -1,3 +1,18 @@
+libphp-pgq (0.4-1) unstable; urgency=low
+
+  * Fix failed_event_list() to fill an associative array of event->id
+  * Fix print Array() from failed_event_{delete,retry}
+  * Connect() errors are now transient, no more fatal
+  * rename deconnect() to disconnect()
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Wed, 12 Nov 2008 12:50:30 +0100
+
+libphp-pgq (0.3-1) unstable; urgency=low
+
+  * Do not unregister consumer when there's a data loss risk identified
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Thu, 11 Sep 2008 16:09:37 +0200
+
 libphp-pgq (0.2-1) unstable; urgency=low
 
   * FIX require path to include "pgq/", as implied by the packaging

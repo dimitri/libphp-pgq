@@ -143,11 +143,14 @@ abstract class PGQConsumer extends SystemDaemon
 	if( $pid !== False )
 	  $this->log->fatal("Can not create queue for an already running daemon.");
 	else {
-	  $this->connect();
-	  $ret = $this->create_queue();
-	  $this->deconnect();
-	  
-	  exit($ret ? 0 : 1);
+	  if( $this->connect() === False ) {
+	    exit(3);
+	  }
+	  else {
+	    $ret = $this->create_queue();
+	    $this->disconnect();
+	    exit($ret ? 0 : 1);
+	  }
 	}
 	break;
 
@@ -156,11 +159,14 @@ abstract class PGQConsumer extends SystemDaemon
 	if( $pid !== False )
 	  $this->log->fatal("Can not drop queue for a running daemon.");
 	else {
-	  $this->connect();
-	  $ret = $this->drop_queue();
-	  $this->deconnect();
-	  
-	  exit($ret ? 0 : 1);
+	  if( $this->connect() === False ) {
+	    exit(3);
+	  }
+	  else {
+	    $ret = $this->drop_queue();
+	    $this->disconnect();
+	    exit($ret ? 0 : 1);
+	  }
 	}
 	break;
 
@@ -169,11 +175,15 @@ abstract class PGQConsumer extends SystemDaemon
 	if( $pid !== False )
 	  $this->log->fatal("Can not register already running daemon.");
 	else {
-	  $this->connect();
-	  $ret = $this->register();
-	  $this->deconnect();
+	  if( $this->connect() === False ) {
+	    exit(3);
+	  }
+	  else {
+	    $ret = $this->register();
+	    $this->disconnect();
 	  
-	  exit($ret ? 0 : 1);
+	    exit($ret ? 0 : 1);
+	  }
 	}
 	break;
 	
@@ -182,25 +192,51 @@ abstract class PGQConsumer extends SystemDaemon
 	if( $pid !== False )
 	  $this->log->fatal("Can not unregister already running daemon.");
 	else {
-	  $this->connect();
-	  $ret = $this->unregister();
-	  $this->deconnect();
+	  $force = False;
+	  if( $argc >= 3 ) {
+	    $force = ($argv[2] == "--force");
+
+	    if( $force != True ) {
+	      $this->log->fatal("unregister [--force]");
+	      exit(1);
+	    }
+	  }
+
+	  if( $this->connect() === False ) {
+	    exit(3);
+	  }
+	  else {
+	    if( $force )
+	      $ret = $this->force_unregister();
+	    else {
+	      if( $this->check_unregister() )
+		$ret = $this->force_unregister();
+	      else
+		$ret = False;
+	    }
+
+	    $this->disconnect();
 	  
-	  exit($ret ? 0 : 1);
+	    exit($ret ? 0 : 1);
+	  }
 	}
 	break;
 
       case "failed":
-      	$this->connect();
-      	$events = $this->failed_event_list();
-      	if( $events !== False )
-			foreach( $events  as $event ) {
-	  			echo $event."\n";
-			}
-		else
-			$this->log->warning("Failed event list is empty.");
-	$this->deconnect();
-	exit(0);
+	if( $this->connect() === False ) {
+	  exit(3);
+	}
+	else {
+	  $events = $this->failed_event_list();
+	  if( $events !== False )
+	    foreach( $events  as $event ) {
+	      echo $event."\n";
+	    }
+	  else
+	    $this->log->warning("Failed event list is empty.");
+	  $this->disconnect();
+	  exit(0);
+	}
 	break;
 
       case "delete":
@@ -208,16 +244,21 @@ abstract class PGQConsumer extends SystemDaemon
 	  $this->log->fatal("delete <event_id> [<event_id> ...]");
 	  exit(1);
 	}
-	$this->connect();
-	if( $argv[2] == "all" )
-	  $this->failed_event_delete_all();
-	else {
-	  for($i = 2; $i < $argc; $i++) {
-	    $this->failed_event_delete($argv[$i]);
-	  }
+
+	if( $this->connect() === False ) {
+	  exit(3);
 	}
-	$this->deconnect();
-	exit(0);
+	else {
+	  if( $argv[2] == "all" )
+	    $this->failed_event_delete_all();
+	  else {
+	    for($i = 2; $i < $argc; $i++) {
+	      $this->failed_event_delete($argv[$i]);
+	    }
+	  }
+	  $this->disconnect();
+	  exit(0);
+	}
 	break;
 
       case "retry":
@@ -225,16 +266,20 @@ abstract class PGQConsumer extends SystemDaemon
 	  $this->log->fatal("delete <event_id> [<event_id> ...]");
 	  exit(1);
 	}
-	$this->connect();
-	if( $argv[2] == "all" )
-	  $this->failed_event_retry_all();
-	else {
-	  for($i = 2; $i < $argc; $i++) {
-	    $this->failed_event_retry($argv[$i]);
-	  }
+	if( $this->connect() === False ) {
+	  exit(3);
 	}
-	$this->deconnect();
-	exit(0);
+	else {
+	  if( $argv[2] == "all" )
+	    $this->failed_event_retry_all();
+	  else {
+	    for($i = 2; $i < $argc; $i++) {
+	      $this->failed_event_retry($argv[$i]);
+	    }
+	  }
+	  $this->disconnect();
+	  exit(0);
+	}
 	break;
 	
       default:
@@ -263,7 +308,7 @@ abstract class PGQConsumer extends SystemDaemon
   public function stop() {
     if( $this->connected ) {
       $this->rollback();
-      $this->deconnect();
+      $this->disconnect();
     }
     parent::stop();
   }
@@ -286,7 +331,11 @@ abstract class PGQConsumer extends SystemDaemon
   {
     $sleep = False;
     
-    $this->connect();
+    if( $this->connect() === False ) {
+      // Can't connect to database, transient error: return to sleep
+      return;
+    }
+
     while( ! $sleep && ! $this->killed ) {
       $batch_id = $this->next_batch();
 
@@ -308,7 +357,7 @@ abstract class PGQConsumer extends SystemDaemon
 	break;
       }
     }
-    $this->deconnect();
+    $this->disconnect();
   }
 
   /**
@@ -421,12 +470,14 @@ abstract class PGQConsumer extends SystemDaemon
     else {
       printf("PGQConsumer %s is running with pid %d\n", $this->name, $pid);
 
-      $this->connect();
+      if( $this->connect() === False ) {
+	return;
+      }
       $status = $this->get_consumer_info();
       foreach( $status as $k => $v)
 	printf("%s: %s\n", $k, $v);
       
-      $this->deconnect();
+      $this->disconnect();
     }
   }
   
@@ -434,13 +485,15 @@ abstract class PGQConsumer extends SystemDaemon
    * Consumer installation: create the queue and register consumer.
    */
   protected function install() {
-    $this->connect();
+    if( $this->connect() === False )
+      return False;
+
     $ret = $this->create_queue();
     
     if( $ret ) {
       $ret = $this->register();
     }
-    $this->deconnect();
+    $this->disconnect();
 
     return $ret;
   }
@@ -449,13 +502,15 @@ abstract class PGQConsumer extends SystemDaemon
    * Consumer uninstall: unregister the consumer and drop the queue
    */
   protected function uninstall() {
-    $this->connect();
+    if( $this->connect() === False )
+      return False;
+
     $ret = $this->unregister();
     
     if( $ret ) {
       $ret = $this->drop_queue();
     }
-    $this->deconnect();
+    $this->disconnect();
 
     return $ret;
   }
@@ -465,15 +520,74 @@ abstract class PGQConsumer extends SystemDaemon
    * registered.
    */
   protected function check() {
-    $this->connect();
+    if( $this->connect() === False )
+      return False;
+
     $ret = $this->queue_exists();
 
     if( $ret ) {
       $ret = $this->is_registered();
     }
-    $this->deconnect();
+    $this->disconnect();
 
     return $ret;
+  }
+
+  /**
+   * check_unregister returns True when we can unregister without
+   * loosing data.
+   *
+   * This now means there's some other consumer registered.
+   * TODO: check for trigger absence when only 1 consumer is registered (us).
+   */
+  protected function check_unregister() {
+    $consumers = $this->get_consumers();
+
+    if( $consumers === False ) {
+      $this->log->error("Couldn't get consumer list for %s", $this->qname);
+      return False;
+    }
+
+    if ( len($consumers) > 1 ) {
+      $this->log->notice("Some other consumers are registered, ".
+			 "unregistering %s.", $this->cname);
+      return True;
+    }
+    else {
+      // We are the only one consumer
+      $this->log->warning("This %s consumer is the only one registered, ".
+			  "use --force to unregister it.", $this->cname);
+      return False;
+    }
+    return False;
+  }
+
+  /**
+   * unregister without bothering.
+   */
+  protected function force_unregister() {
+    return $this->unregister();
+  }
+
+  /**
+   * TODO.
+   * drop triggers on the provider
+   */
+  protected function drop_trigger() {
+    return False;
+  }
+  
+  /**
+   * TODO.
+   *
+   * keep data job is to go find non consumed events in the pgq queue
+   * and insert them again in the main table.
+   */
+  protected function keep_data() {
+    if( $this->drop_trigger() ) {
+      return False;
+    }
+    return False;
   }
 
   /**
@@ -482,7 +596,7 @@ abstract class PGQConsumer extends SystemDaemon
   public function connect($force = False) { 
     if( $this->connected && ! $force ) {
       $this->log->notice("connect called when connected is True");
-      return;
+      return True;
     }
 
     if( $this->src_constr != "" ) {
@@ -490,20 +604,27 @@ abstract class PGQConsumer extends SystemDaemon
       $this->pg_src_con = pg_connect($this->src_constr);
       
       if( $this->pg_src_con === False ) {
-	$this->log->fatal("Could not open pg_src connection '%s'.",
+	$this->log->error("Could not open pg_src connection '%s'.",
 			  $this->src_constr);
-	$this->stop();
+	// $this->stop();
+	return False;
       }
     }
+    else {
+      $this->log->error("Connexion string is empty, please fix.");
+      return False;
+    }
+
     $this->connected = True;
+    return True;
   }
 	
   /**
-   * Deconnect from databases
+   * Disconnect from databases
    */
-  public function deconnect() {
+  public function disconnect() {
     if( ! $this->connected ) {
-      $this->log->notice("deconnect called when $this->connected is False");
+      $this->log->notice("disconnect called when $this->connected is False");
       return;
     }
     
@@ -569,6 +690,10 @@ abstract class PGQConsumer extends SystemDaemon
   protected function get_consumer_info() {
     return PGQ::get_consumer_info($this->log, $this->pg_src_con, 
 				  $this->qname, $this->cname);
+  }
+
+  public function get_consumers($log, $pgcon, $qname) {
+    return PGQ::get_consumers($this->log, $this->pg_src_con, $this->qname);
   }
 	
   protected function next_batch() {

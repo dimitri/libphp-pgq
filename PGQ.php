@@ -177,6 +177,29 @@ abstract class PGQ {
   }
 
   /**
+   * get_consumers returns a list of consumers attached to the queue
+   */
+  public static function get_consumers($log, $pgcon, $qname) {
+    $sq = sprintf("SELECT * FROM pgq.get_consumer_info('%s')",
+		  pg_escape_string($qname));
+    
+    $log->debug("%s", $sq);
+    $result = pg_query($pgcon, $sq);
+    $resultset = pg_fetch_all($r);
+    
+    if( $result === False or $resultset === False ) {
+      $log->warning("Could not get consumers list for '%s'", $qname);
+      return False;
+    }
+    $clist = array();
+    
+    foreach( $resultset as $row ) {
+      $clist[] = $row;
+    }
+    return $clist;
+  }
+
+  /**
    * Get next batch id
    *
    * Returns null when pgq.next_batch() returns null or failed.
@@ -303,7 +326,8 @@ abstract class PGQ {
     }
     
     foreach( $resultset as $row ) {
-      $events[] = new PGQEvent($log, $row);
+      $event = new PGQEvent($log, $row);
+      $events[$event->id] = $event;
     }
     return $events;
   }
@@ -311,11 +335,14 @@ abstract class PGQ {
   /**
    * Helper function failed_event_delete_all
    */
-  public static function failed_event_delete_all($log, $pgcon, $qname, $cname) {
+  public static function failed_event_delete_all($log, $pgcon, 
+						 $qname, $cname) {
     $allok = True;
-    foreach( PGQ::failed_event_list($log, $pgcon, $qname, $cname) as $event_id => $event ) {
-      $allok = $allok && PGQ::failed_event_delete($log, $pgcon, $qname, $cname, $event_id);
-
+    foreach( PGQ::failed_event_list($log, $pgcon, $qname, $cname)
+	     as $event_id => $event ) 
+    {
+      $allok = $allok && PGQ::failed_event_delete($log, $pgcon,
+						  $qname, $cname, $event_id);
       if( ! $allok )
 	return False;
     }
@@ -325,7 +352,8 @@ abstract class PGQ {
   /**
    * failed_event_delete
    */
-  public static function failed_event_delete($log, $pgcon, $qname, $cname, $event_id) {
+  public static function failed_event_delete($log, $pgcon,
+					     $qname, $cname, $event_id) {
     $sql = sprintf("SELECT pgq.failed_event_delete('%s', '%s', %d)",
 		   pg_escape_string($qname),
 		   pg_escape_string($cname),
@@ -339,7 +367,8 @@ abstract class PGQ {
       return False;
     }
     if( pg_num_rows($result) == 1 ) {
-      print pg_fetch_assoc($result, 0);
+      $event = new PGQEvent($log, pg_fetch_assoc($result, 0));
+      echo $event."\n";
       return True;
     }
     else {
@@ -356,9 +385,11 @@ abstract class PGQ {
   public static function failed_event_retry_all($log, $pgcon, $qname, $cname) {
     $allok = True;
 
-    foreach( PGQ::failed_event_list($log, $pgcon, $qname, $cname) as $event_id => $event ) {
-      $allok = $allok && PGQ::failed_event_retry($log, $pgcon, $qname, $cname, $event_id);
-
+    foreach( PGQ::failed_event_list($log, $pgcon, $qname, $cname) 
+	     as $event_id => $event ) 
+    {
+      $allok = $allok && PGQ::failed_event_retry($log, $pgcon,
+						 $qname, $cname, $event_id);
       if( ! $allok )
 	return False;
     }
@@ -368,7 +399,8 @@ abstract class PGQ {
   /**
    * failed_event_retry
    */
-  public static function failed_event_retry($log, $pgcon, $qname, $cname, $event_id) {
+  public static function failed_event_retry($log, $pgcon,
+					    $qname, $cname, $event_id) {
     $sql = sprintf("SELECT pgq.failed_event_retry('%s', '%s', %d)",
 		   pg_escape_string($qname),
 		   pg_escape_string($cname),
@@ -382,7 +414,8 @@ abstract class PGQ {
       return False;
     }
     if( pg_num_rows($result) == 1 ) {
-      print pg_fetch_assoc($result, 0);
+      $event = new PGQEvent($log, pg_fetch_assoc($result, 0));
+      echo $event."\n";
       return True;
     }
     else {

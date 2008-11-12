@@ -136,7 +136,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
        * pgq.next_batch SQL code), no wraparound risk here.
        */
       $this->log->verbose("Skipping batch %d, already processed (<= %d)", 
-			  $batch_id, $last_batch_id);
+			  $batch_id, $this->last_batch_id);
       $this->finish_batch($batch_id);
       pg_query($this->pg_src_con, "COMMIT;");			
       pg_query($this->pg_dst_con, "ROLLBACK;");
@@ -203,13 +203,15 @@ abstract class PGQRemoteConsumer extends PGQConsumer
     if( parent::check() === False )
       return False;
 
-    $this->connect();
+    if( $this->connect() === False )
+      return False;
+
     $ret = $this->check_pgq_last_batch();
 
     if( $ret ) {
       $ret = $this->check_pgq_trigger();
     }    
-    $this->deconnect();
+    $this->disconnect();
 
     return $ret;
   }
@@ -320,7 +322,8 @@ abstract class PGQRemoteConsumer extends PGQConsumer
    * Installs trigger at source site.
    */
   public function install_trigger() {
-    $this->connect();
+    if( $this->connect() === False )
+      return False;
 
     if( $this->check_pgq_trigger() ) {
       $this->log->error("PGQRemoteConsumer trigger already exists");
@@ -362,11 +365,11 @@ abstract class PGQRemoteConsumer extends PGQConsumer
   }
 	
   /**
-   * Deconnect from databases
+   * Disconnect from databases
    */
-  public function deconnect() {
+  public function disconnect() {
     if( ! $this->connected ) {
-      $this->log->notice("deconnect called when $this->connected is False");
+      $this->log->notice("disconnect called when $this->connected is False");
       return;
     }
     
@@ -376,7 +379,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
       pg_close($this->pg_dst_con);
       $this->pg_dst_con = null;
     }
-    parent::deconnect();
+    parent::disconnect();
   }
 	
   /**

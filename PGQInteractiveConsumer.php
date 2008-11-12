@@ -41,7 +41,8 @@ abstract class PGQInteractiveConsumer {
    * call it at one point in order for process_event() to get fired.
    */
   public function process() {
-    $this->connect();
+    if( $this->connect() === False )
+      return False;
 
     do {
       $batch_id = $this->next_batch();
@@ -76,7 +77,7 @@ abstract class PGQInteractiveConsumer {
     }
     while( $batch_id !== null );
 
-    $this->deconnect();
+    $this->disconnect();
 
     $this->log->notice("PGQInteractiveConsumer.process: next_batch is null");
     return True;
@@ -105,11 +106,11 @@ abstract class PGQInteractiveConsumer {
   }
 	
   /**
-   * Deconnect from databases
+   * Disconnect from databases
    */
-  public function deconnect() {
+  public function disconnect() {
     if( ! $this->connected ) {
-      $this->log->notice("deconnect called when $this->connected is False");
+      $this->log->notice("disconnect called when $this->connected is False");
       return;
     }
     

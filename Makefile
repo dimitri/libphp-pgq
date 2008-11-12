@@ -1,5 +1,5 @@
 PKGNAME = libphp-pgq
-VERSION = 0.2
+VERSION = $(shell awk -F '[-()]' 'NR == 1 {print $$3}' debian/changelog)
 DOCS    = README
 PHP_SRC = $(wildcard *.php)
 
