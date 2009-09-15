@@ -488,13 +488,15 @@ abstract class PGQConsumer extends SystemDaemon
     if( $this->connect() === False )
       return False;
 
+    pg_query($this->pg_src_con, "BEGIN;");
     $ret = $this->create_queue();
     
     if( $ret ) {
       $ret = $this->register();
     }
-    $this->disconnect();
+    pg_query($this->pg_src_con, "COMMIT;"); 
 
+    $this->disconnect();
     return $ret;
   }
 
@@ -505,13 +507,15 @@ abstract class PGQConsumer extends SystemDaemon
     if( $this->connect() === False )
       return False;
 
+    pg_query($this->pg_src_con, "BEGIN;");
     $ret = $this->unregister();
     
     if( $ret ) {
       $ret = $this->drop_queue();
     }
-    $this->disconnect();
+    pg_query($this->pg_src_con, "COMMIT;");
 
+    $this->disconnect();
     return $ret;
   }
 
@@ -715,6 +719,10 @@ abstract class PGQConsumer extends SystemDaemon
 
   protected function event_retry($batch_id, $event) {
     return PGQ::event_retry($this->log, $this->pg_src_con, $batch_id, $event);
+  }
+
+  protected function maint_retry_events() {
+    return PGQ::maint_retry_events($this->log, $this->pg_src_con);
   }
 
   protected function failed_event_list() {

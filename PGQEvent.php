@@ -20,7 +20,7 @@ class PGQEvent
 
     $this->tag  = null;
     $this->failed_reason = null;
-    $this->retry_delay   = null;
+    $this->retry_delay   = 18000;   /* default to 5 hours, arbitrarily */
 
     if( $row !== null ) {
       $this->init_from_row($row);

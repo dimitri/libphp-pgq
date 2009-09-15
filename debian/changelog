@@ -1,3 +1,18 @@
+libphp-pgq (0.6-1) unstable; urgency=low
+
+  * Protect install / uninstall in a transaction
+  * Debug PGQ::get_consumers() to only use $result when not False
+  * Debug PGQ::{un}register to preperly define result variables...
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Tue, 15 Sep 2009 10:33:58 +0200
+
+libphp-pgq (0.5-1) unstable; urgency=low
+
+  * Add pgq.maint_retry_events() in the PGQ and PGQConsumer APIs
+  * change the default PGQEvent retry_delay to 5 hours instead of null
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Thu, 25 Jun 2009 10:36:50 +0200
+
 libphp-pgq (0.4-1) unstable; urgency=low
 
   * Fix failed_event_list() to fill an associative array of event->id

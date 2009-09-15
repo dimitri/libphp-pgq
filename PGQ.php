@@ -90,7 +90,8 @@ abstract class PGQ {
 		   pg_escape_string($cname));
     
     $log->verbose("%s", $sql);
-    if( ($r = pg_query($pgcon, $sql)) === False ) {
+    $r = pg_query($pgcon, $sql);
+    if( $r === False ) {
       $log->warning("Could not register consumer '%s' to queue '%s'",
 		    $cname, $qname);
       return False;
@@ -115,7 +116,8 @@ abstract class PGQ {
 		   pg_escape_string($cname));
     
     $log->verbose("%s", $sql);
-    if( pg_query($pgcon, $sql) === False ) {
+    $r = pg_query($pgcon, $sql);
+    if( $r === False ) {
       $log->fatal("Could not unregister consumer '%s' to queue '%s'",
 		  $cname, $qname);
       return False;
@@ -126,7 +128,7 @@ abstract class PGQ {
       return True;
     }
     else {
-      $log->fatal("Register Consumer failed (%d).", $unregistered);
+      $log->fatal("Unregister Consumer failed (%d).", $unregistered);
       return False;
     }
   }
@@ -185,7 +187,7 @@ abstract class PGQ {
     
     $log->debug("%s", $sq);
     $result = pg_query($pgcon, $sq);
-    $resultset = pg_fetch_all($r);
+    $resultset = $result !== False ? pg_fetch_all($result) : False;
     
     if( $result === False or $resultset === False ) {
       $log->warning("Could not get consumers list for '%s'", $qname);
@@ -300,6 +302,30 @@ abstract class PGQ {
       return False;
     }
     return True;
+  }
+
+  /**
+   * Call the retry_queue maintenance function, which is responsible of
+   * pushing the events there back into main queue when the ev_retry_after
+   * is in the past.
+   */
+  public static function maint_retry_events($log, $pgcon) {
+    $sql = sprintf("SELECT pgq.maint_retry_events();");
+    
+    $log->verbose("%s", $sql);
+    if( ($r = pg_query($pgcon, $sql)) === False ) {
+      $log->error("Failed to process retry queue");
+      return False;
+    }
+    /* the SQL function signature is: returns integer */
+    $count = pg_fetch_result($r, 0, 0);
+
+    if( $count === False ) {
+      $log->warning("maint_retry_events got no result");
+      return False;
+    }
+    
+    return $count;
   }
   
   /**

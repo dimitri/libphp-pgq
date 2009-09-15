@@ -1,8 +1,8 @@
 Source: libphp-pgq
-Section: devel
+Section: php
 Priority: optional
 Maintainer: Dimitri Fontaine <dim@tapoueh.org>
-Standards-Version: 3.8.0
+Standards-Version: 3.8.2
 Build-Depends: debhelper (>= 5)
 Homepage: http://pgfoundry.org/projects/skytools
 
