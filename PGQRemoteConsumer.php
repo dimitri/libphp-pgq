@@ -238,7 +238,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
       // Be nice with user
       $this->log->fatal("Please issue CREATE TABLE %s ".
 			"(qname text, consumer_id text, batch_id bigint, ".
-			"PRIMARY KEY (qname, consumer_id);",
+			"PRIMARY KEY (qname, consumer_id));",
 			PGQ_LAST_BATCH);
 	return False;
     }

@@ -7,6 +7,7 @@ declare(ticks = 1);
 /**
  * Classes implementing SystemDaemon must implement following methods:
  *  - php_error_hook()
+ *  - kill_hook($pid)
  *  - config()
  *  - process()
  *
@@ -29,6 +30,9 @@ declare(ticks = 1);
  * process() will get run form an infinite loop, which you still can
  * break out of by sendig SIGTERM or SIGINT to the daemon, which can
  * be made with the kill and stop command. 
+ *
+ * You can implement a kill_hook($pid) function which will get called before
+ * signaling the running daemon.
  *
  * The stop command (or kill -INT <pid>) won't have immediate effect
  * but will rather get the daemon to quit at next loop beginning:
@@ -86,9 +90,10 @@ abstract class SystemDaemon
   /**
    * Implement those functions when inheriting from this class.
    */
-  protected function config() {	}
-  protected function process() {	}
+  protected function config()         { }
+  protected function process()        { }
   protected function php_error_hook() { }
+  protected function kill_hook($pid)  { }
   
   /**
    * main is responsible of command line parsing and daemon interactions
@@ -118,6 +123,7 @@ abstract class SystemDaemon
       
     case "kill":
       $pid = $this->checkpid(4);
+      $this->kill_hook($pid);
       posix_kill($pid, SIGTERM);
       break;
 

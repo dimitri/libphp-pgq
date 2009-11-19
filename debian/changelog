@@ -1,3 +1,10 @@
+libphp-pgq (0.7-1) unstable; urgency=low
+
+  * add a kill_hook($pid) in SystemDaemon
+  * Fix the fatal error hint message to create the pgq_last_batch table
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Thu, 19 Nov 2009 17:51:41 +0100
+
 libphp-pgq (0.6-1) unstable; urgency=low
 
   * Protect install / uninstall in a transaction
