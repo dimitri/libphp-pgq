@@ -1,3 +1,11 @@
+libphp-pgq (0.8-1) unstable; urgency=low
+
+  * Avoid defining constants if they are already set, by our users e.g.
+  * Fix exception handling in function exceptFault()
+  * As tempnam() creates the file, append .log by means of rename
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Tue, 01 Dec 2009 16:39:27 +0100
+
 libphp-pgq (0.7-1) unstable; urgency=low
 
   * add a kill_hook($pid) in SystemDaemon

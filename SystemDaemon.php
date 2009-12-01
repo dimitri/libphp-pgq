@@ -1,5 +1,5 @@
 <?php
-define("PIDFILE_PREFIX", "/tmp");
+defined("PIDFILE_PREFIX") || define("PIDFILE_PREFIX", "/tmp");
 
 require_once("pgq/SimpleLogger.php");
 declare(ticks = 1);
@@ -500,7 +500,7 @@ abstract class SystemDaemon
       $message .= "; source: " . $trace[0]["file"] . ":" . $trace[0]["line"];
     }
     
-    $this->log->fatal( $exception->getMessage($message) );
+    $this->log->fatal($message);
     $this->stop();
   }
 }

@@ -10,7 +10,7 @@ define("NOTICE",  30);
 define("VERBOSE", 20);
 define("DEBUG",   10);
 
-define("DEFAULT_TZ", "Europe/Paris");
+defined("DEFAULT_TZ") || define("DEFAULT_TZ", "Europe/Paris");
 
 class SimpleLogger 
 {
@@ -21,8 +21,11 @@ class SimpleLogger
   public function __construct($loglevel, $logfile) {
     $this->loglevel = $loglevel;
 
-    if( empty( $logfile ) )
-      $this->logfile = sprintf("%s.log", tempnam("/tmp", "SimpleLogger-"));
+    if( empty( $logfile ) ) {
+      $this->logfile = tempnam("/tmp", "SimpleLogger-");
+      if( $this->logfile !== False )
+	rename($this->logfile, sprintf("%s.log", $this->logfile));
+    }
     else 
       $this->logfile = $logfile;
     
