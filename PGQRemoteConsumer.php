@@ -19,6 +19,10 @@ require_once("pgq/PGQConsumer.php");
  * find our last batch id.  The logs are explicit with respect to how
  * to define the trigger and to create the table.
  *
+ * If the table name you give the constructor is NULL, the trigger will not
+ * be checked at all. That allows you to use a non-SKIP trigger or have more
+ * than one table producing events into the queue.
+ *
  * When implementing a PGQConsumer, you should define following methods:
  *  - config()
  *  - process_event($event)  --- $event is a PGQEvent
@@ -178,8 +182,9 @@ abstract class PGQRemoteConsumer extends PGQConsumer
   }
 
   /**
-   * Install must take care of creating the trigger.
-
+   * Install must take care of creating the trigger, unless $this->table is
+   * set to NULL.
+   *
    * But we don't create the PGQ_LAST_BATCH table, which can be shared be
    * several daemons.
    *
@@ -188,9 +193,9 @@ abstract class PGQRemoteConsumer extends PGQConsumer
    */
   public function install() {
     $ret = parent::install();
-    if ($ret ) 
+    if( $ret && $this->table != NULL ) {
       $ret = $this->install_trigger();
-
+	}
     return $ret;
   }
 
@@ -208,7 +213,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
 
     $ret = $this->check_pgq_last_batch();
 
-    if( $ret ) {
+    if( $ret && $this->table != NULL ) {
       $ret = $this->check_pgq_trigger();
     }    
     $this->disconnect();
