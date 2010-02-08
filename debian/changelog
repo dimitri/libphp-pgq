@@ -1,3 +1,9 @@
+libphp-pgq (0.9~dev1-2) unstable; urgency=low
+
+  * Fix the urlencoded decode function to avoid using empty()
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Mon, 08 Feb 2010 10:14:09 +0100
+
 libphp-pgq (0.8-1) unstable; urgency=low
 
   * Avoid defining constants if they are already set, by our users e.g.

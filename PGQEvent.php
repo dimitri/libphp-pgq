@@ -62,11 +62,11 @@ class PGQEvent
     
     for($i=0; $i < $n; $i++ ) {
       $pair = split('=', $pairs[$i]);
-      if( ! empty( $pair[1] ) ) {
-	$decoded[urldecode($pair[0])] = urldecode($pair[1]);
+      if( isset( $pair[1] ) ) {
+		  $decoded[urldecode($pair[0])] = urldecode($pair[1]);
       }
       else {
-	$decoded[urldecode($pair[0])] = null;
+		  $decoded[urldecode($pair[0])] = null;
       }
     }
     return $decoded;
