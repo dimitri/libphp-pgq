@@ -12,12 +12,12 @@ define("DEBUG",   10);
 
 defined("DEFAULT_TZ") || define("DEFAULT_TZ", "Europe/Paris");
 
-class SimpleLogger 
+class SimpleLogger
 {
   private $logfile_fd = False;
   public $loglevel = WARNING;
   public $logfile;
-	
+
   public function __construct($loglevel, $logfile) {
     $this->loglevel = $loglevel;
 
@@ -26,9 +26,9 @@ class SimpleLogger
       if( $this->logfile !== False )
 	rename($this->logfile, sprintf("%s.log", $this->logfile));
     }
-    else 
+    else
       $this->logfile = $logfile;
-    
+
     date_default_timezone_set(DEFAULT_TZ);
     $this->open();
   }
@@ -46,22 +46,22 @@ class SimpleLogger
       $this->logfile_fd = $this->logfile;
     else
       $this->logfile_fd = fopen($this->logfile, "a+");
-  	
+
     if( $this->logfile_fd === false ) {
       fprintf(STDERR, "FATAL: couldn't open '%s' \n", $this->logfile);
-    }	
+    }
     else
       $this->notice("Logging to file '%s'", $this->logfile);
   }
-  
+
   /**
    * At reload time, don't forget to reopen $this->logfile
    * This allows for log rotating.
    */
   public function reopen() {
-    $this->warning("Closing log file ".$this->logfile);	  	
+    $this->warning("Closing log file ".$this->logfile);
     fclose($this->logfile_fd);
-    $this->logfile_fd = False;    
+    $this->logfile_fd = False;
     $this->open();
   }
 
@@ -105,11 +105,11 @@ class SimpleLogger
 
   function _log($level, $args) {
     if( $level >= $this->loglevel ) {
-      $format = array_shift($args);  	
-      $date   = date("Y-m-d H:i:s");    
-      $vargs  = array_merge(array($date, $this->strlevel($level)), $args);    
+      $format = array_shift($args);
+      $date   = date("Y-m-d H:i:s");
+      $vargs  = array_merge(array($date, $this->strlevel($level)), $args);
       $mesg   = vsprintf("%s\t%s\t".$format."\n", $vargs);
-				  
+
       fwrite($this->logfile_fd, $mesg);
     }
   }
@@ -147,26 +147,26 @@ class SimpleLogger
 
   /**
    * On the fly log level control utility functions
-   */  
+   */
   public function logless() {
     $this->_log($this->loglevel, array("Incrementing loglevel"));
-  	
+
     if( $this->loglevel < FATAL )
       $this->loglevel += 10;
-  	  
-    $this->_log($this->loglevel, 
+
+    $this->_log($this->loglevel,
 		array("loglevel is now %s", $this->strlevel($this->loglevel)));
   }
 
   public function logmore() {
     $this->_log($this->loglevel, array("Decrementing loglevel"));
-  	
+
     if( $this->loglevel > DEBUG )
       $this->loglevel -= 10;
-    
-    $this->_log($this->loglevel, 
+
+    $this->_log($this->loglevel,
 		array("loglevel is now %s", $this->strlevel($this->loglevel)));
-  }  
+  }
 }
 
 ?>

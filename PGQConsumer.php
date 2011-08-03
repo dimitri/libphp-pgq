@@ -13,7 +13,7 @@ require_once("pgq/SystemDaemon.php");
  *  http://skytools.projects.postgresql.org/doc/pgq-admin.html
  *  http://skytools.projects.postgresql.org/doc/pgq-sql.html
  *  http://skytools.projects.postgresql.org/doc/pgq-nodupes.html
- * 
+ *
  *  http://kaiv.wordpress.com/2007/10/19/skytools-database-scripting-framework-pgq/
  *
  *  http://www.pgcon.org/2008/schedule/events/79.en.html
@@ -58,15 +58,15 @@ abstract class PGQConsumer extends SystemDaemon
   protected $connected  = False;
   protected $src_constr;
   protected $pg_src_con;
-		
+
   protected $cname;  // consumer name (pgq consumer id)
   protected $qname; // queue name
-	
-  public function __construct($cname, $qname, $argc, $argv, $src_constr) 
+
+  public function __construct($cname, $qname, $argc, $argv, $src_constr)
   {
     $this->cname = $cname;
     $this->qname = $qname;
-    
+
     $this->commands[] = "install";
     $this->commands[] = "uninstall";
     $this->commands[] = "check";
@@ -77,9 +77,9 @@ abstract class PGQConsumer extends SystemDaemon
     $this->commands[] = "failed";
     $this->commands[] = "delete";
     $this->commands[] = "retry";
-    
+
     $this->src_constr  = $src_constr;
-		
+
     parent::__construct($argc, $argv);
   }
 
@@ -93,7 +93,7 @@ abstract class PGQConsumer extends SystemDaemon
    */
   public function preprocess_event($event) {}
   public function postprocess_event($event) {}
-	
+
   /**
    * We overload SystemDaemon::main() in order to support our specific
    * commands too.
@@ -103,7 +103,7 @@ abstract class PGQConsumer extends SystemDaemon
       fprintf(STDERR, $this->usage($this->name));
       exit(1);
     }
-		
+
     switch( $argv[1] )
       {
       case "install":
@@ -115,7 +115,7 @@ abstract class PGQConsumer extends SystemDaemon
 	  exit($ret ? 0 : 1);
 	}
 	break;
-	
+
       case "uninstall":
 	$pid = $this->getpid();
 	if( $pid !== False )
@@ -125,7 +125,7 @@ abstract class PGQConsumer extends SystemDaemon
 	  exit($ret ? 0 : 1);
 	}
 	break;
-	
+
       case "check":
 	$pid = $this->getpid();
 	if( $pid !== False ) {
@@ -181,12 +181,12 @@ abstract class PGQConsumer extends SystemDaemon
 	  else {
 	    $ret = $this->register();
 	    $this->disconnect();
-	  
+
 	    exit($ret ? 0 : 1);
 	  }
 	}
 	break;
-	
+
       case "unregister":
 	$pid = $this->getpid();
 	if( $pid !== False )
@@ -216,7 +216,7 @@ abstract class PGQConsumer extends SystemDaemon
 	    }
 
 	    $this->disconnect();
-	  
+
 	    exit($ret ? 0 : 1);
 	  }
 	}
@@ -281,7 +281,7 @@ abstract class PGQConsumer extends SystemDaemon
 	  exit(0);
 	}
 	break;
-	
+
       default:
 	/**
 	 * Support daemon commands: start, stop, reload, restart, ...
@@ -300,7 +300,7 @@ abstract class PGQConsumer extends SystemDaemon
     else
       $this->stop();
   }
-	
+
   /**
    * Stop is called either at normal exit or when receiving an error,
    * PHP errors included.
@@ -312,7 +312,7 @@ abstract class PGQConsumer extends SystemDaemon
     }
     parent::stop();
   }
-	
+
   /**
    * Process available batches, sleeping only when next_batch() returns null.
    *
@@ -330,7 +330,7 @@ abstract class PGQConsumer extends SystemDaemon
   public function process()
   {
     $sleep = False;
-    
+
     if( $this->connect() === False ) {
       // Can't connect to database, transient error: return to sleep
       return;
@@ -407,7 +407,7 @@ abstract class PGQConsumer extends SystemDaemon
 	case PGQ_EVENT_OK:
 	  break;
 	}
-	
+
 	if( ! $abort_batch ) {
 	  if( $this->postprocess_event($event) === PGQ_ABORT_BATCH) {
 	    $this->log->verbose("PGQConsumer.postprocess_event(%d) abort batches", $event->id);
@@ -430,7 +430,7 @@ abstract class PGQConsumer extends SystemDaemon
     pg_query($this->pg_src_con, "BEGIN;");
 
     $events = $this->get_batch_events($batch_id);
-		
+
     if( $events === False ) {
       // batch with no event
       $this->log->debug("PGQConsumer.preprocess_batch got no events");
@@ -455,7 +455,7 @@ abstract class PGQConsumer extends SystemDaemon
 
     if( $this->finish_batch($batch_id) === False )
       $this->log->warning("Could not mark batch id %d as finished", $batch_id);
-    
+
     pg_query($this->pg_src_con, "COMMIT;");
     return True;
   }
@@ -476,11 +476,11 @@ abstract class PGQConsumer extends SystemDaemon
       $status = $this->get_consumer_info();
       foreach( $status as $k => $v)
 	printf("%s: %s\n", $k, $v);
-      
+
       $this->disconnect();
     }
   }
-  
+
   /**
    * Consumer installation: create the queue and register consumer.
    */
@@ -490,11 +490,11 @@ abstract class PGQConsumer extends SystemDaemon
 
     pg_query($this->pg_src_con, "BEGIN;");
     $ret = $this->create_queue();
-    
+
     if( $ret ) {
       $ret = $this->register();
     }
-    pg_query($this->pg_src_con, "COMMIT;"); 
+    pg_query($this->pg_src_con, "COMMIT;");
 
     $this->disconnect();
     return $ret;
@@ -509,7 +509,7 @@ abstract class PGQConsumer extends SystemDaemon
 
     pg_query($this->pg_src_con, "BEGIN;");
     $ret = $this->unregister();
-    
+
     if( $ret ) {
       $ret = $this->drop_queue();
     }
@@ -580,7 +580,7 @@ abstract class PGQConsumer extends SystemDaemon
   protected function drop_trigger() {
     return False;
   }
-  
+
   /**
    * TODO.
    *
@@ -597,7 +597,7 @@ abstract class PGQConsumer extends SystemDaemon
   /**
    * Connects to the conw & conp connection strings.
    */
-  public function connect($force = False) { 
+  public function connect($force = False) {
     if( $this->connected && ! $force ) {
       $this->log->notice("connect called when connected is True");
       return True;
@@ -606,7 +606,7 @@ abstract class PGQConsumer extends SystemDaemon
     if( $this->src_constr != "" ) {
       $this->log->verbose("Opening pg_src connexion '%s'.", $this->src_constr);
       $this->pg_src_con = pg_connect($this->src_constr);
-      
+
       if( $this->pg_src_con === False ) {
 	$this->log->error("Could not open pg_src connection '%s'.",
 			  $this->src_constr);
@@ -622,7 +622,7 @@ abstract class PGQConsumer extends SystemDaemon
     $this->connected = True;
     return True;
   }
-	
+
   /**
    * Disconnect from databases
    */
@@ -631,7 +631,7 @@ abstract class PGQConsumer extends SystemDaemon
       $this->log->notice("disconnect called when $this->connected is False");
       return;
     }
-    
+
     if( $this->pg_src_con != null && $this->pg_src_con !== False ) {
       $this->log->verbose("Closing pg_src connection '%s'.",
 			  $this->src_constr);
@@ -640,7 +640,7 @@ abstract class PGQConsumer extends SystemDaemon
     }
     $this->connected = False;
   }
-	
+
   /**
    * ROLLBACK ongoing transactions on src & dst connections
    */
@@ -651,22 +651,22 @@ abstract class PGQConsumer extends SystemDaemon
       pg_query($this->pg_src_con, "ROLLBACK;");
     }
   }
-	
+
   /**
    * This hook is called when a PHP error at level
    * E_USER_ERROR or E_ERROR is raised.
-   * 
+   *
    * Those errors are not considered fatal: abort current batch
    * processing, but don't have the PGQConsumer daemon quit.
    */
   protected function php_error_hook() {
     $this->rollback();
   }
-    
+
 
   protected function create_queue() {
     return PGQ::create_queue($this->log, $this->pg_src_con, $this->qname);
-  }		
+  }
 
   protected function drop_queue() {
     return PGQ::drop_queue($this->log, $this->pg_src_con, $this->qname);
@@ -675,33 +675,33 @@ abstract class PGQConsumer extends SystemDaemon
   protected function queue_exists() {
     return PGQ::queue_exists($this->log, $this->pg_src_con, $this->qname);
   }
-	
-  protected function register() {			
-    return PGQ::register($this->log, $this->pg_src_con, 
+
+  protected function register() {
+    return PGQ::register($this->log, $this->pg_src_con,
 			 $this->qname, $this->cname);
   }
-	
+
   protected function unregister() {
-    return PGQ::unregister($this->log, $this->pg_src_con, 
+    return PGQ::unregister($this->log, $this->pg_src_con,
 			   $this->qname, $this->cname);
   }
-	
+
   protected function is_registered() {
-    return PGQ::is_registered($this->log, $this->pg_src_con, 
+    return PGQ::is_registered($this->log, $this->pg_src_con,
 			      $this->qname, $this->cname);
   }
 
   protected function get_consumer_info() {
-    return PGQ::get_consumer_info($this->log, $this->pg_src_con, 
+    return PGQ::get_consumer_info($this->log, $this->pg_src_con,
 				  $this->qname, $this->cname);
   }
 
   public function get_consumers($log, $pgcon, $qname) {
     return PGQ::get_consumers($this->log, $this->pg_src_con, $this->qname);
   }
-	
+
   protected function next_batch() {
-    return PGQ::next_batch($this->log, $this->pg_src_con, 
+    return PGQ::next_batch($this->log, $this->pg_src_con,
 			   $this->qname, $this->cname);
   }
 
@@ -712,7 +712,7 @@ abstract class PGQConsumer extends SystemDaemon
   protected function get_batch_events($batch_id) {
     return PGQ::get_batch_events($this->log, $this->pg_src_con, $batch_id);
   }
-	
+
   protected function event_failed($batch_id, $event) {
     return PGQ::event_failed($this->log, $this->pg_src_con, $batch_id, $event);
   }

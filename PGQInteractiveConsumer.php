@@ -21,7 +21,7 @@ abstract class PGQInteractiveConsumer {
   protected $pgcon;
   protected $log;
 
-  public function __construct($qname, $cname, 
+  public function __construct($qname, $cname,
 			      $src_constr, $loglevel, $logfile) {
     $this->qname      = $qname;
     $this->cname      = $qname;
@@ -70,7 +70,7 @@ abstract class PGQInteractiveConsumer {
 	    break;
 	  }
 	}
-	
+
 	$this->finish_batch($batch_id);
 	pg_query($this->pgcon, "COMMIT;");
       }
@@ -86,7 +86,7 @@ abstract class PGQInteractiveConsumer {
   /**
    * Connects to the conw & conp connection strings.
    */
-  public function connect($force = False) { 
+  public function connect($force = False) {
     if( $this->connected && ! $force ) {
       $this->log->notice("connect called when connected is True");
       return;
@@ -95,7 +95,7 @@ abstract class PGQInteractiveConsumer {
     if( $this->src_constr != "" ) {
       $this->log->verbose("Opening pg_src connexion '%s'.", $this->src_constr);
       $this->pg_src_con = pg_connect($this->src_constr);
-      
+
       if( $this->pg_src_con === False ) {
 	$this->log->fatal("Could not open pg_src connection '%s'.",
 			  $this->src_constr);
@@ -104,7 +104,7 @@ abstract class PGQInteractiveConsumer {
     }
     $this->connected = True;
   }
-	
+
   /**
    * Disconnect from databases
    */
@@ -113,7 +113,7 @@ abstract class PGQInteractiveConsumer {
       $this->log->notice("disconnect called when $this->connected is False");
       return;
     }
-    
+
     if( $this->pg_src_con != null && $this->pg_src_con !== False ) {
       $this->log->verbose("Closing pg_src connection '%s'.",
 			  $this->src_constr);
@@ -122,7 +122,7 @@ abstract class PGQInteractiveConsumer {
     }
     $this->connected = False;
   }
-	
+
   /**
    * ROLLBACK ongoing transactions on src & dst connections
    */
@@ -141,19 +141,19 @@ abstract class PGQInteractiveConsumer {
   protected function queue_exists() {
     return PGQ::queue_exists($this->log, $this->pg_src_con, $this->qname);
   }
-	
+
   protected function is_registered() {
-    return PGQ::is_registered($this->log, $this->pg_src_con, 
+    return PGQ::is_registered($this->log, $this->pg_src_con,
 			      $this->qname, $this->cname);
   }
 
   protected function get_consumer_info() {
-    return PGQ::get_consumer_info($this->log, $this->pg_src_con, 
+    return PGQ::get_consumer_info($this->log, $this->pg_src_con,
 				  $this->qname, $this->cname);
   }
-	
+
   protected function next_batch() {
-    return PGQ::next_batch($this->log, $this->pg_src_con, 
+    return PGQ::next_batch($this->log, $this->pg_src_con,
 			   $this->qname, $this->cname);
   }
 
@@ -164,7 +164,7 @@ abstract class PGQInteractiveConsumer {
   protected function get_batch_events($batch_id) {
     return PGQ::get_batch_events($this->log, $this->pg_src_con, $batch_id);
   }
-	
+
   protected function event_failed($batch_id, $event) {
     return PGQ::event_failed($this->log, $this->pg_src_con, $batch_id, $event);
   }

@@ -39,7 +39,7 @@ class PGQEvent
     $this->type          = $row["ev_type"];
     $this->data          = $this->decode($row["ev_data"]);
     $this->table         = $row["ev_extra1"];
-    
+
     if( array_key_exists( "ev_failed_reason", $row ) ) {
 	$this->failed_reason = $row[ "ev_failed_reason" ];
     }
@@ -50,16 +50,16 @@ class PGQEvent
 
   /**
    * decode urlencoded data field1=value1&field2=value2
-   * 
+   *
    * @return: array("field1" => "value1", ...);
    */
   protected function decode($data) {
     $this->log->debug("PGQEvent::decode(%s)", $data);
     $decoded = array();
-    
+
     $pairs = explode('&', $data);
     $n = count($pairs);
-    
+
     for($i=0; $i < $n; $i++ ) {
       $pair = split('=', $pairs[$i]);
       if( isset( $pair[1] ) ) {
@@ -89,14 +89,14 @@ class PGQEvent
    */
   public function __toString() {
     $data_str = "";
-    
+
     foreach( $this->data as $fieldName => $value ) {
 	$data_str .= "\n\t[".$fieldName."] => ".$value;
     }
 
     return sprintf("Event id : %10d\nTime : %s\nFailed time : %s\n".
-		   "Type: %s\nFailed reason : %s\nData :%s\n", 
-		   $this->id, 
+		   "Type: %s\nFailed reason : %s\nData :%s\n",
+		   $this->id,
 		   $this->time,
 		   $this->failed_time,
 		   $this->type,
@@ -109,7 +109,7 @@ class PGQEvent
    *  PGQ_EVENT_OK, PGQ_EVENT_FAILED, PGQ_EVENT_RETRY
    */
   public function tag($tag) {
-    if( $tag == PGQ_EVENT_OK 
+    if( $tag == PGQ_EVENT_OK
         || $tag == PGQ_EVENT_FAILED
 	|| $tag == PGQ_EVENT_RETRY )
 

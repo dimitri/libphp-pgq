@@ -12,7 +12,7 @@ require_once("pgq/PGQConsumer.php");
  *
  * To ensure no batch is processed more than once, PGQRemoteConsumer
  * uses a table at destination side to store last processed batch
- * id. 
+ * id.
  *
  * PGQRemoteConsumer will check if the trigger PGQ_TRIGGER_NAME is
  * installed, and will use PGQ_LAST_BATCH as the table name where to
@@ -45,13 +45,13 @@ abstract class PGQRemoteConsumer extends PGQConsumer
     $this->table         = $table;
     $this->dst_constr    = $dst_constr;
     $this->last_batch_id = null;
-    
+
     parent::__construct($cname, $qname, $argc, $argv, $src_constr);
   }
 
   /**
    * Manage batches of events, and call process_event() for each of
-   * them. 
+   * them.
    *
    * At COMMIT time, we store current batch_id as the last processed
    * on destination database (while in the processing transaction),
@@ -70,7 +70,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
 
     // WARNING: DO NOT USE switch() HERE
     $batch_done = $this->is_batch_done($batch_id);
-    
+
     if( $batch_done === null ) {
       // error getting last batch information, don't process_batch
       return False;
@@ -92,7 +92,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
       $this->rollback();
       return False;
     }
-    
+
     if( $this->set_batch_done($batch_id) ) {
       parent::postprocess_batch($batch_id);
       pg_query($this->pg_dst_con, "COMMIT;");
@@ -122,14 +122,14 @@ abstract class PGQRemoteConsumer extends PGQConsumer
       $this->rollback();
       return null;
     }
-    
+
     $this->last_batch_id = null;
-		
+
     if( pg_num_rows( $r ) > 0  ) {
       $this->last_batch_id = pg_fetch_result($r, 0, 0);
     }
     $this->log->debug("PGQRemoteConsumer.is_batch_done last_batch_id=%d batch_id=%d", $this->last_batch_id, $batch_id);
-		
+
     if( $this->last_batch_id == null ) {
       $this->log->warning("No last processed batch id");
       return False;
@@ -139,10 +139,10 @@ abstract class PGQRemoteConsumer extends PGQConsumer
        * batch already processed. As batch_id is a bigserial (see
        * pgq.next_batch SQL code), no wraparound risk here.
        */
-      $this->log->verbose("Skipping batch %d, already processed (<= %d)", 
+      $this->log->verbose("Skipping batch %d, already processed (<= %d)",
 			  $batch_id, $this->last_batch_id);
       $this->finish_batch($batch_id);
-      pg_query($this->pg_src_con, "COMMIT;");			
+      pg_query($this->pg_src_con, "COMMIT;");
       pg_query($this->pg_dst_con, "ROLLBACK;");
 
       return True;
@@ -215,7 +215,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
 
     if( $ret && $this->table != NULL ) {
       $ret = $this->check_pgq_trigger();
-    }    
+    }
     $this->disconnect();
 
     return $ret;
@@ -230,14 +230,14 @@ abstract class PGQRemoteConsumer extends PGQConsumer
     $this->log->verbose("PGQRemoteConsumer: %s", $sql_ct);
 
     $result = pg_query($this->pg_dst_con, $sql_ct);
-    
+
     if(  $result === False ) {
       $this->log->fatal("Could not check if table exist '%s'", PGQ_LAST_BATCH);
       return False;
     }
-		
+
     if( pg_num_rows( $result ) == 0) {
-      $this->log->fatal("Table %s doesn't exist on database '%s'", 
+      $this->log->fatal("Table %s doesn't exist on database '%s'",
 			PGQ_LAST_BATCH, $this->dst_constr);
 
       // Be nice with user
@@ -252,7 +252,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
 
   /**
    * Return the SQL for creating the trigger.
-   */  
+   */
   public function trigger_sql() {
     return sprintf("CREATE TRIGGER %s ".
 		   "BEFORE INSERT ON %s ".
@@ -270,28 +270,28 @@ abstract class PGQRemoteConsumer extends PGQConsumer
     $sql_ct = sprintf("SELECT t.tgname, pg_catalog.pg_get_triggerdef(t.oid) ".
 		      "  FROM pg_catalog.pg_trigger t ".
 		      "       JOIN pg_class c ON t.tgrelid = c.oid ");
-	                  
+
     if( strpos($this->table, ".") > 0 ) {
       // table name with schema
       $tmp = explode(".", $this->table);
       $schemaname = $tmp[0];
       $tablename  = $tmp[1];
-      
+
       $sql_ct = sprintf("%s WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = '%s') ".
-			"AND c.relname = '%s' AND tgname = '%s'", 
+			"AND c.relname = '%s' AND tgname = '%s'",
 			$sql_ct,
 			pg_escape_string($schemaname),
-			pg_escape_string($tablename), 
+			pg_escape_string($tablename),
 			pg_escape_string(PGQ_TRIGGER_NAME));
     }
     else {
       // non qualified table name
       $sql_ct = sprintf("%s WHERE c.relname = '%s' AND tgname = '%s'",
 			$sql_ct,
-			pg_escape_string($this->table), 
+			pg_escape_string($this->table),
 			pg_escape_string(PGQ_TRIGGER_NAME));
     }
-        
+
     $this->log->verbose("PGQRemoteConsumer check: %s", $sql_ct);
     if( ($r = pg_query($this->pg_src_con, $sql_ct)) === False ) {
       $this->log->fatal("PGQRemoteConsumer check: SQL error ON '%s'", $sql_ct);
@@ -349,17 +349,17 @@ abstract class PGQRemoteConsumer extends PGQConsumer
   /**
    * Connects to the conw & conp connection strings.
    */
-  public function connect($force = False) { 
+  public function connect($force = False) {
     if( $this->connected && ! $force ) {
       $this->log->notice("connect called when connected is True");
       return;
     }
-		
-    if( $this->dst_constr != "" ) {			
+
+    if( $this->dst_constr != "" ) {
       $this->log->verbose("Opening pg_dst connexion '%s'.",
-			  $this->dst_constr);			
+			  $this->dst_constr);
       $this->pg_dst_con = pg_connect($this->dst_constr);
-      
+
       if( $this->pg_dst_con === False ) {
 	$this->log->fatal("Could not open pg_dst connextion '%s'.",
 			  $this->dst_constr);
@@ -368,7 +368,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
     }
     parent::connect($force);
   }
-	
+
   /**
    * Disconnect from databases
    */
@@ -377,7 +377,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
       $this->log->notice("disconnect called when $this->connected is False");
       return;
     }
-    
+
     if( $this->pg_dst_con != null && $this->pg_dst_con !== False ) {
       $this->log->verbose("Closing pg_dst connection '%s'.",
 			  $this->dst_constr);
@@ -386,7 +386,7 @@ abstract class PGQRemoteConsumer extends PGQConsumer
     }
     parent::disconnect();
   }
-	
+
   /**
    * ROLLBACK ongoing transactions on src & dst connections
    */
