@@ -61,7 +61,7 @@ class PGQEvent
     $n = count($pairs);
 
     for($i=0; $i < $n; $i++ ) {
-      $pair = split('=', $pairs[$i]);
+      $pair = explode('=', $pairs[$i]);
       if( isset( $pair[1] ) ) {
 		  $decoded[urldecode($pair[0])] = urldecode($pair[1]);
       }
