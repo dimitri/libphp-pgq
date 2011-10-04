@@ -53,7 +53,7 @@ deb:
 	cp $(ORIG) $(ARCHIVE)
 
 	# build the debian package and copy them to ..
-	(cd $(EXPORT) && debuild)
+	(cd $(EXPORT) && debuild -us -uc)
 	cp -a $(DEBDIR)/export/$(PKGNAME)[_-]$(VERSION)??[._]* ..
 	cp -a $(ARCHIVE) ..
 	cp -a $(ORIG) ..
