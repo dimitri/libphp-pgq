@@ -1,6 +1,6 @@
 #! /usr/bin/php5
 <?php
-require_once( "../SystemDaemon.php" );
+require_once( "pgq/SystemDaemon.php" );
 
 define("CONFIGURATION", "testd.conf");
 
@@ -14,12 +14,12 @@ class Testd extends SystemDaemon
 
 		global $Config;
 		require(CONFIGURATION);
-		
+
 		$this->loglevel = $Config["LOGLEVEL"];
 		$this->logfile  = $Config["LOGFILE"];
 		$this->delay    = $Config["DELAY"];
 	}
-	
+
 	public function process( )
 	{
 		$this->log->notice("Starting process loop");
@@ -30,9 +30,9 @@ class Testd extends SystemDaemon
 					$this->log->debug("Inner loop %d", $i);
 			}
 			$this->log->verbose("Let's loop again! ". $j);
-		}		
+		}
 		$this->log->notice("Ending process loop");
-	}	
+	}
 }
 
 $myTestd = new Testd($argc, $argv);
