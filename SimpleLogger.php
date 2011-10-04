@@ -34,8 +34,11 @@ class SimpleLogger
   }
 
   function __destruct() {
-    $this->notice("Closing log file ".$this->logfile);
-    fclose($this->logfile_fd);
+    /* Only close the logfile when we opened it ourselves */
+    if( $this->logfile === $this->logfile_fd ) {
+      $this->notice("Closing log file ".$this->logfile);
+      fclose($this->logfile_fd);
+	}
   }
 
   /**
