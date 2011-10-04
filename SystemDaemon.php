@@ -198,6 +198,13 @@ abstract class SystemDaemon
 		posix_strerror(posix_get_last_error()));
 	exit;
       }
+      // don't forget a daemon gets to close those
+      fclose(STDIN); fclose(STDOUT); fclose(STDERR);
+
+	  // reopen ids 0, 1 and 2 so that hard coded libs have no problem
+	  fopen("/dev/null", "a+"); // STDIN
+	  fopen("/dev/null", "a+"); // STDOUT
+	  fopen("/dev/null", "a+"); // STDERR
 
       /**
        * config() provides log filename and loglevel
@@ -228,9 +235,6 @@ abstract class SystemDaemon
       pcntl_signal(SIGHUP,  array(&$this, "handleSignals"));
       pcntl_signal(SIGUSR1, array(&$this, "handleSignals"));
       pcntl_signal(SIGUSR2, array(&$this, "handleSignals"));
-
-      // don't forget a daemon gets to close those
-      fclose(STDIN); fclose(STDOUT); fclose(STDERR);
 
       /**
        * Now we're ready to run.
