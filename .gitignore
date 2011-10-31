@@ -1,0 +1,5 @@
+README.html
+build-stamp
+configure-stamp
+debian/files
+debian/libphp-pgq*
