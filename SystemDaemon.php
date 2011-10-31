@@ -459,7 +459,6 @@ abstract class SystemDaemon
 
     switch( (int)$errno )
       {
-      case E_STRICT:
       case E_PARSE:
       case E_CORE_ERROR:
       case E_CORE_WARNING:
@@ -482,6 +481,7 @@ abstract class SystemDaemon
 	return true;
 	break;
 
+      case E_STRICT:
       case E_NOTICE:
       case E_USER_NOTICE:
 	$this->log->notice( $message );
