@@ -696,7 +696,7 @@ abstract class PGQConsumer extends SystemDaemon
 				  $this->qname, $this->cname);
   }
 
-  public function get_consumers($log, $pgcon, $qname) {
+  public function get_consumers() {
     return PGQ::get_consumers($this->log, $this->pg_src_con, $this->qname);
   }
 
