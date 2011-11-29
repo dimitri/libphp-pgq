@@ -82,6 +82,8 @@ abstract class SystemDaemon
   protected $name;
   protected $fullname;
 
+  protected $debug = false; // if true, stdin/out/err won't be closed
+
   protected $pidfile;
   protected $sid;
   protected $killed = False;
@@ -208,13 +210,18 @@ abstract class SystemDaemon
 		posix_strerror(posix_get_last_error()));
 	exit;
       }
-      // don't forget a daemon gets to close those
-      fclose(STDIN); fclose(STDOUT); fclose(STDERR);
 
-	  // reopen ids 0, 1 and 2 so that hard coded libs have no problem
-	  fopen("/dev/null", "a+"); // STDIN
-	  fopen("/dev/null", "a+"); // STDOUT
-	  fopen("/dev/null", "a+"); // STDERR
+      if (!$this->debug) {
+	// don't forget a daemon gets to close those
+	fclose(STDIN);
+	fclose(STDOUT);
+	fclose(STDERR);
+
+	// reopen ids 0, 1 and 2 so that hard coded libs have no problem
+	fopen("/dev/null", "a+"); // STDIN
+	fopen("/dev/null", "a+"); // STDOUT
+	fopen("/dev/null", "a+"); // STDERR
+      }
 
       /**
        * config() provides log filename and loglevel
