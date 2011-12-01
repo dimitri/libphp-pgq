@@ -1,3 +1,10 @@
+libphp-pgq (0.12-1) unstable; urgency=low
+
+  * Better DEBUG facilities for unhandled errors
+  * Add handling of errors in newer versions of PHP
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Thu, 01 Dec 2011 14:43:51 +0100
+
 libphp-pgq (0.11-1) unstable; urgency=low
 
   * E_STRICT is not a FATAL error by any means (try being backward compatible)
