@@ -1,6 +1,16 @@
 <?php
 defined("PIDFILE_PREFIX") || define("PIDFILE_PREFIX", "/tmp");
 
+if (!defined('E_RECOVERABLE_ERROR')) {
+  define('E_RECOVERABLE_ERROR', 4096);
+}
+if (!defined('E_DEPRECATED')) {
+  define('E_DEPRECATED', 8192);
+}
+if (!defined('E_USER_DEPRECATED')) {
+  define('E_USER_DEPRECATED', 16384);
+}
+
 require_once("pgq/SimpleLogger.php");
 declare(ticks = 1);
 
@@ -71,6 +81,8 @@ abstract class SystemDaemon
 
   protected $name;
   protected $fullname;
+
+  protected $debug = false; // if true, stdin/out/err won't be closed
 
   protected $pidfile;
   protected $sid;
@@ -198,13 +210,18 @@ abstract class SystemDaemon
 		posix_strerror(posix_get_last_error()));
 	exit;
       }
-      // don't forget a daemon gets to close those
-      fclose(STDIN); fclose(STDOUT); fclose(STDERR);
 
-	  // reopen ids 0, 1 and 2 so that hard coded libs have no problem
-	  fopen("/dev/null", "a+"); // STDIN
-	  fopen("/dev/null", "a+"); // STDOUT
-	  fopen("/dev/null", "a+"); // STDERR
+      if (!$this->debug) {
+	// don't forget a daemon gets to close those
+	fclose(STDIN);
+	fclose(STDOUT);
+	fclose(STDERR);
+
+	// reopen ids 0, 1 and 2 so that hard coded libs have no problem
+	fopen("/dev/null", "a+"); // STDIN
+	fopen("/dev/null", "a+"); // STDOUT
+	fopen("/dev/null", "a+"); // STDERR
+      }
 
       /**
        * config() provides log filename and loglevel
@@ -470,18 +487,20 @@ abstract class SystemDaemon
 
       case E_USER_ERROR:
       case E_ERROR:
+      case E_RECOVERABLE_ERROR:
 	$this->log->error( $message );
 	$this->php_error_hook();
 	break;
 
       case E_WARNING:
       case E_USER_WARNING:
-	//case E_RECOVERABLE_ERROR:
 	$this->log->warning( $message );
 	return true;
 	break;
 
       case E_STRICT:
+      case E_DEPRECATED:
+      case E_USER_DEPRECATED:
       case E_NOTICE:
       case E_USER_NOTICE:
 	$this->log->notice( $message );
