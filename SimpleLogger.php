@@ -35,20 +35,21 @@ class SimpleLogger
 
   function __destruct() {
     /* Only close the logfile when we opened it ourselves */
-    if( $this->logfile === $this->logfile_fd ) {
+    if (!is_resource($this->logfile)) {
       $this->notice("Closing log file ".$this->logfile);
       fclose($this->logfile_fd);
-	}
+    }
   }
 
   /**
    * Opens the given filename, or use the given stream resource (STDOUT)
    */
   private function open() {
-    if( @fstat($this->logfile) !== False )
+    if(is_resource($this->logfile)) {
       $this->logfile_fd = $this->logfile;
-    else
+    } else {
       $this->logfile_fd = fopen($this->logfile, "a+");
+    }
 
     if( $this->logfile_fd === false ) {
       fprintf(STDERR, "FATAL: couldn't open '%s' \n", $this->logfile);
