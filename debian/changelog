@@ -1,3 +1,9 @@
+libphp-pgq (0.13-1) unstable; urgency=low
+
+  * Fix simple logger streams detection
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Thu, 22 Dec 2011 12:17:26 +0100
+
 libphp-pgq (0.12-1) unstable; urgency=low
 
   * Better DEBUG facilities for unhandled errors
