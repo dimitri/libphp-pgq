@@ -7,7 +7,7 @@ require_once("pgq/PGQRemoteConsumer.php");
  * to be commited or rollbacked at event level.
  */
 
-abstract class PGQEventRemoteConsumer extends PGQConsumer
+abstract class PGQCoopConsumer extends PGQConsumer
 {
   protected $sname; // subconsumer name
   protected $timeout = NULL;
@@ -15,7 +15,7 @@ abstract class PGQEventRemoteConsumer extends PGQConsumer
   public function __construct($sname, $cname, $qname, $argc, $argv, $src_constr)
   {
 	  $this->sname = $sname;
-	  parent::__construct($argc, $argv);
+	  parent::__construct($cname, $qname, $argc, $argv, $src_constr);
   }
 
   protected function register() {
@@ -25,7 +25,7 @@ abstract class PGQEventRemoteConsumer extends PGQConsumer
 				   pg_escape_string($this->sname));
 
     $this->log->verbose("%s", $sql);
-    $r = pg_query($pgcon, $sql);
+    $r = pg_query($this->pg_src_con, $sql);
     if( $r === False ) {
 		$this->log->warning(
 			"Could not register subconsumer '%s' of '%s' to queue '%s'",
@@ -46,14 +46,14 @@ abstract class PGQEventRemoteConsumer extends PGQConsumer
   /**
    * Unregister PGQ Consumer. Called from stop().
    */
-  public static function unregister() {
+  public function unregister() {
     $sql = sprintf("SELECT pgq_coop.unregister_subconsumer('%s', '%s', '%s', 0);",
 				   pg_escape_string($qname),
 				   pg_escape_string($cname),
 				   pg_escape_string($sname));
 
     $this->log->verbose("%s", $sql);
-    $r = pg_query($pgcon, $sql);
+    $r = pg_query($this->pg_src_con, $sql);
     if( $r === False ) {
       $this->log->fatal("Could not unregister subconsumer '%s' of '%s' to queue '%s'",
 				  $this->sname, $this->cname, $this->qname);
@@ -107,5 +107,4 @@ abstract class PGQEventRemoteConsumer extends PGQConsumer
     return True;
   }
 }
-
 ?>
