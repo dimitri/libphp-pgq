@@ -1,3 +1,9 @@
+libphp-pgq (0.14-1) unstable; urgency=low
+
+  * Add support for PGQ Cooperative Consumers (PGQ 3)
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Wed, 08 Feb 2012 15:35:40 +0100
+
 libphp-pgq (0.13-1) unstable; urgency=low
 
   * Fix simple logger streams detection
