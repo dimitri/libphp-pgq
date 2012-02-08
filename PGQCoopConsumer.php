@@ -18,7 +18,7 @@ abstract class PGQEventRemoteConsumer extends PGQConsumer
 	  parent::__construct($argc, $argv);
   }
 
-  protected function register_subconsumer() {
+  protected function register() {
     $sql = sprintf("SELECT pgq_coop.register_subconsumer('%s', '%s', '%s');",
 				   pg_escape_string($this->qname),
 				   pg_escape_string($this->cname),
@@ -46,7 +46,7 @@ abstract class PGQEventRemoteConsumer extends PGQConsumer
   /**
    * Unregister PGQ Consumer. Called from stop().
    */
-  public static function unregister_sbconsumer() {
+  public static function unregister() {
     $sql = sprintf("SELECT pgq_coop.unregister_subconsumer('%s', '%s', '%s', 0);",
 				   pg_escape_string($qname),
 				   pg_escape_string($cname),
