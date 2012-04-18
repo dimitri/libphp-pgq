@@ -2,14 +2,14 @@ Source: libphp-pgq
 Section: php
 Priority: optional
 Maintainer: Dimitri Fontaine <dim@tapoueh.org>
-Standards-Version: 3.9.1
+Standards-Version: 3.9.2
 Build-Depends: debhelper (>= 5)
 Homepage: http://pgfoundry.org/projects/skytools
 
 Package: libphp-pgq
 Architecture: all
-Depends: php5-cli
-Suggests: skytools, skytools-modules-8.1 | skytools-modules-8.2 | skytools-modules-8.3
+Depends: ${misc:Depends}, php5-cli
+Suggests: skytools | skytools3
 Description: PHP level API for PGQ PostgreSQL Queing solution
  PgQ is Postgres based event processing system. It is part of SkyTools
  package that contains several useful implementations on this

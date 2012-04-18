@@ -1,3 +1,9 @@
+libphp-pgq (0.15-2) unstable; urgency=low
+
+  * Fix Cooperative Consumer status
+
+ -- Dimitri Fontaine <dim@tapoueh.org>  Wed, 18 Apr 2012 11:42:41 +0200
+
 libphp-pgq (0.14-1) unstable; urgency=low
 
   * Add support for PGQ Cooperative Consumers (PGQ 3)
