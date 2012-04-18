@@ -109,7 +109,8 @@ abstract class PGQCoopConsumer extends PGQConsumer
 
   protected function get_consumer_info() {
 	  return PGQ::get_consumer_info($this->log, $this->pg_src_con,
-									$this->qname, $this->sname);
+									$this->qname,
+									$this->cname . "." . $this->sname);
   }
 }
 ?>
