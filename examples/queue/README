@@ -1,0 +1,29 @@
+= PGQ test
+
+This repository contains a PGQ test
+
+== Install
+
+    psql -1 -f schema.sql $database
+    ./testq.php install
+    ./testq.php start
+
+    psql $database <<EOF
+ CREATE TRIGGER ins_to_queue
+  BEFORE INSERT ON libphp
+   FOR EACH ROW EXECUTE PROCEDURE pgq.logutriga('libphp', 'SKIP');
+EOF
+
+== Generate Events
+
+    pgbench -c 1 -f generate.sql
+
+== See the daemon processing events
+
+As this toy daemon will only log the processing, to see it happen just:
+
+    tail -f /tmp/testq.log
+
+== Uninstall
+
+    psql -c "DROP SCHEMA test CASCADE;" $database

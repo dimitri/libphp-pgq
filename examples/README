@@ -1,0 +1,13 @@
+= Examples
+
+We provide some examples here:
+
+ - system
+
+   System Daemon integration only, useful if you just want to run a general
+   purpose daemon in PHP
+
+ - queue
+
+   Fairly simple example of a PGQConsumer (non-remote) with script to insert
+   example events in there
