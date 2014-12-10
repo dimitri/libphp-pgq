@@ -38,6 +38,7 @@ class PGQEvent
     $this->retry         = $row["ev_retry"];
     $this->type          = $row["ev_type"];
     $this->data          = $this->decode($row["ev_data"]);
+    $this->oldData       = $this->decode($row["ev_extra2"]);
     $this->table         = $row["ev_extra1"];
 
     if( array_key_exists( "ev_failed_reason", $row ) ) {
@@ -77,11 +78,12 @@ class PGQEvent
    */
   public function as_array() {
     return array("time"  => $this->time,
-		 "txid"  => $this->txid,
-		 "retry" => $this->retry,
-		 "type"  => $this->type,
-		 "data"  => $this->data,
-		 "table" => $this->table);
+		 "txid"     => $this->txid,
+		 "retry"    => $this->retry,
+		 "type"     => $this->type,
+		 "data"     => $this->data,
+		 "oldData"  => $this->oldData,
+		 "table"    => $this->table);
   }
 
   /**
