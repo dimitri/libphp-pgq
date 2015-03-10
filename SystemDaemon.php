@@ -429,7 +429,7 @@ abstract class SystemDaemon
 
 	if( ! $this->killed ) {
 	  $this->log->debug("sleeping %d seconds", $this->delay);
-	  sleep($this->delay);
+	  usleep(1000000 * $this->delay);
 	}
       }
     $this->stop();
