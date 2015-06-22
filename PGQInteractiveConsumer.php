@@ -24,7 +24,7 @@ abstract class PGQInteractiveConsumer {
   public function __construct($qname, $cname,
 			      $src_constr, $loglevel, $logfile) {
     $this->qname      = $qname;
-    $this->cname      = $qname;
+    $this->cname      = $cname;
     $this->src_constr = $src_constr;
 
     $this->pgcon = pg_connect($this->src_constr);
@@ -158,7 +158,7 @@ abstract class PGQInteractiveConsumer {
   }
 
   protected function finish_batch($batch_id) {
-    return PGQ::next_batch($this->log, $this->pg_src_con, $batch_id);
+    return PGQ::finish_batch($this->log, $this->pg_src_con, $batch_id);
   }
 
   protected function get_batch_events($batch_id) {
