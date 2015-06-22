@@ -461,7 +461,7 @@ abstract class SystemDaemon
       break;
 
     case SIGUSR2:
-      $this->log->warning("Received USR1 signal, logging less");
+      $this->log->warning("Received USR2 signal, logging less");
       $this->log->logless();
       break;
     }
