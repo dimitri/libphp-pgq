@@ -1,17 +1,4 @@
 <?php
-
-/**
- * log levels
- */
-define("FATAL",   60);
-define("ERROR",   50);
-define("WARNING", 40);
-define("NOTICE",  30);
-define("VERBOSE", 20);
-define("DEBUG",   10);
-
-defined("DEFAULT_TZ") || define("DEFAULT_TZ", "Europe/Paris");
-
 class SimpleLogger
 {
   private $logfile_fd = False;

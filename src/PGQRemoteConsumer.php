@@ -1,6 +1,4 @@
 <?php
-require_once("pgq/PGQConsumer.php");
-
 /**
  * PGQRemoteConsumer is a PGQConsumer to use when you need to process
  * the events at a remote site. It ensures a single batch won't get
@@ -29,10 +27,6 @@ require_once("pgq/PGQConsumer.php");
  *
  * See PGQConsumer for more details.
  */
-
-define("PGQ_TRIGGER_NAME", "ins_to_queue");
-define("PGQ_LAST_BATCH", "pgq_last_batch");
-
 abstract class PGQRemoteConsumer extends PGQConsumer
 {
   protected $table; // table name where to install pgq.logutriga trigger

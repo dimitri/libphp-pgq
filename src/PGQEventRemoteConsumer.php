@@ -1,6 +1,4 @@
 <?php
-require_once("pgq/PGQRemoteConsumer.php");
-
 /**
  * PGQEventRemoteConsumer is a PGQRemoteConsumer which handles nested
  * transactions for event management, allowing the remote processing

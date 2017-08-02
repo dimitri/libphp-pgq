@@ -1,5 +1,4 @@
 <?php
-
 /**
  * PGQEvent stores URLencoded data and provides simple API
  * to access its fields.

@@ -1,6 +1,4 @@
 <?php
-require_once("pgq/PGQEvent.php");
-
 /**
  * If PHP new about modules or namespaces, this would be a PGQ module.
  *
@@ -9,13 +7,6 @@ require_once("pgq/PGQEvent.php");
  *
  *  $batch_id = PGQ::next_batch();
  */
-
-// No sense is given nor necessary for those constants, as soon as
-// there's no colision.
-define("PGQ_EVENT_OK",     1);
-define("PGQ_EVENT_FAILED", 2);
-define("PGQ_EVENT_RETRY",  5);
-define("PGQ_ABORT_BATCH", 11);
 
 abstract class PGQ {
   /**
