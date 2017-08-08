@@ -14,7 +14,7 @@ ARCHIVE= $(DEBDIR)/export/$(PKGNAME)-$(VERSION).tar.gz
 
 doc: README.html
 
-README.html: README
+README.html: README.asciidoc
 	asciidoc -a toc -o $@ $<
 
 install: doc
