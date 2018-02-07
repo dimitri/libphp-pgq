@@ -1,6 +1,9 @@
 #! /usr/bin/php5
 <?php
-require_once( "pgq/PGQConsumer.php" );
+
+use pgq\PGQConsumer;
+
+require_once( "pgq/pgq\PGQConsumer.php" );
 
 define("CONFIGURATION", "testq.conf");
 

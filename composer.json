@@ -6,7 +6,9 @@
         "ext-pgsql": "*"
     },
     "autoload": {
-        "classmap": ["src/"],
+        "psr-4": {
+            "pgq\\": "src/"
+        },
         "files": ["src/constants.php"]
     }
 }
