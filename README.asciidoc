@@ -214,7 +214,7 @@ use a subtransaction (+SAVEPOINT+) for each event and will be able to
 +ROLLBACK TO SAVEPOINT+ on the remote side for any processing error
 related to a single event processing.
 
-=== PGQCoopeConsumer
+=== PGQCoopConsumer
 
 This Consumer will share batches in between all its subconsumer processes.
 You need to register each of the subconsumer separately.
