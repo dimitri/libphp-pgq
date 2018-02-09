@@ -1,11 +1,11 @@
 #! /usr/bin/php5
 <?php
+// adjust if needs
+require __DIR__.'/vendor/autoload.php';
 
 use pgq\PGQConsumer;
 
-require_once( "pgq/pgq\PGQConsumer.php" );
-
-define("CONFIGURATION", "testq.conf");
+define("CONFIGURATION", __DIR__."/testq.conf");
 
 class Testq extends PGQConsumer
 {
