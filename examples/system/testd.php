@@ -1,9 +1,9 @@
 #! /usr/bin/php5
 <?php
+// adjust if needs
+require __DIR__.'/vendor/autoload.php';
 
 use pgq\SystemDaemon;
-
-require_once( "pgq/pgq\SystemDaemon.php" );
 
 define("CONFIGURATION", "testd.conf");
 
