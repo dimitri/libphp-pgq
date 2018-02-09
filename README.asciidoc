@@ -18,6 +18,8 @@ consumer get those events, in batches, and work on them. What the PHP
 class to be presented here do is fetching the batches and calling your
 own process_event() function for each event.
 
+It's available on https://packagist.org/packages/dimitri/libphp-pgq[packagist.org].
+
 == Tools
 
 === SimpleLogger
