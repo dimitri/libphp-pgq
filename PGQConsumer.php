@@ -1,6 +1,4 @@
 <?php
-require_once("pgq/PGQ.php");
-require_once("pgq/SystemDaemon.php");
 
 /**
  * PGQConsumer is a SystemDaemon providing the PGQ SQL API for PHP

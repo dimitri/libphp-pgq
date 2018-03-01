@@ -1,0 +1,21 @@
+{
+    "name": "dimitri/libphp-pgq",
+    "description": "PHP level API for PGQ PostgreSQL Queuing solution",
+    "require": {
+        "ext-pcntl": "*",
+        "ext-pgsql": "*"
+    },
+    "autoload": {
+        "classmap": [
+            "PGQConsumer.php",
+            "PGQCoopConsumer.php",
+            "PGQEvent.php",
+            "PGQEventRemoteConsumer.php",
+            "PGQInteractiveConsumer.php",
+            "PGQ.php",
+            "PGQRemoteConsumer.php",
+            "SimpleLogger.php",
+            "SystemDaemon.php"
+        ]
+    }
+}

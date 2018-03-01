@@ -1,6 +1,4 @@
 <?php
-require_once("pgq/PGQ.php");
-require_once("pgq/SimpleLogger.php");
 
 /**
  * This PGQ consumer class allows to have interactive consuming. That

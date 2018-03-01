@@ -1,5 +1,4 @@
 <?php
-require_once("pgq/PGQEvent.php");
 
 /**
  * If PHP new about modules or namespaces, this would be a PGQ module.
