@@ -16,6 +16,9 @@
             "PGQRemoteConsumer.php",
             "SimpleLogger.php",
             "SystemDaemon.php"
+        ],
+        "files": [
+            "constants.php"
         ]
     }
 }
